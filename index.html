@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>描述性统计工具箱</title>
+<style>
+:root{
+  --bg:#f5f7fa; --card:#fff; --ink:#1f2937; --muted:#6b7280;
+  --line:#e5e7eb; --blue:#2563eb; --teal:#0d9488; --amber:#d97706; --rose:#e11d48;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",system-ui,sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+header{background:linear-gradient(120deg,#1e3a8a 0%,#0d9488 100%);color:#fff;padding:24px 20px 20px}
+header .inner{max-width:1180px;margin:0 auto}
+header h1{margin:0;font-size:21px;letter-spacing:.5px;font-weight:600}
+header p{margin:5px 0 0;font-size:12.5px;opacity:.85}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card h2{margin:0 0 12px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .tag{font-size:11px;font-weight:400;color:var(--muted);background:#f3f4f6;padding:1px 8px;border-radius:20px}
+textarea{width:100%;min-height:84px;resize:vertical;padding:10px 12px;border:1px solid var(--line);
+  border-radius:8px;font-family:Consolas,Monaco,monospace;font-size:13px;line-height:1.55;outline:none;color:var(--ink)}
+textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 14px;
+  border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:.15s}
+button:hover{border-color:#c7d2fe;background:#f8faff}
+button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+button.primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+select,input[type=number]{padding:6px 8px;border:1px solid var(--line);border-radius:8px;
+  font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
+.slider-box{margin-top:12px;padding:12px 14px;background:#f9fafb;border-radius:9px;border:1px dashed #d1d5db}
+.slider-box .lbl{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
+.slider-box .lbl b{color:var(--rose);white-space:nowrap}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;margin-top:10px;
+  border-radius:3px;background:linear-gradient(90deg,#fecdd3,#e11d48);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:#e11d48;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#e11d48;
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:pointer}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:920px){.grid3,.grid2{grid-template-columns:1fr}}
+.metric{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed #eef1f5}
+.metric:last-child{border-bottom:none}
+.metric .k{color:var(--muted);font-size:13px}
+.metric .v{font-weight:600;font-variant-numeric:tabular-nums;color:#111;text-align:right}
+.metric .v small{font-weight:400;color:var(--muted);font-size:11px;margin-left:4px}
+h3.sec{margin:0 0 8px;font-size:13.5px;color:var(--blue);letter-spacing:.3px;font-weight:600}
+h3.sec.t{color:var(--teal)} h3.sec.a{color:var(--amber)}
+.hint{font-size:12px;color:var(--muted);margin:9px 0 0}
+canvas{width:100%;height:248px;display:block}
+.chart-title{font-size:12.5px;color:var(--muted);margin:0 0 4px}
+.concl{font-size:13.5px;line-height:1.9}
+.concl p{margin:0 0 8px}
+.concl b{color:var(--blue)}
+.concl .hl{color:var(--rose);font-weight:600}
+details summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--blue);list-style:none;outline:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸";display:inline-block;margin-right:8px;transition:.2s}
+details[open] summary::before{transform:rotate(90deg)}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#f8fafc;font-weight:600;white-space:nowrap}
+td code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:Consolas,monospace;font-size:12px}
+footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 30px}
+.pill{display:inline-block;font-size:11.5px;padding:1px 9px;border-radius:20px;
+  background:#eef2ff;color:#3730a3;margin-left:6px}
+.pill.warn{background:#fff1f2;color:#be123c}
+.pill.ok{background:#ecfdf5;color:#047857}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.bar h2{margin:0}
+.grp-name{font-weight:600;color:#2563eb}
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <h1>描述性统计工具箱</h1>
+    <p>集中趋势 · 离散程度 · 分布形态 · 常用图表 —— 改数据、拖动滑杆，所有指标与图形实时重算</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>① 输入数据 <span class="tag">逗号 / 空格 / 换行 / 制表符分隔都行</span></h2>
+    <textarea id="raw" placeholder="把一列数字粘贴到这里，例如：78 85 92 88 76 ……"></textarea>
+    <div class="row">
+      <button class="primary" id="btnParse">解析并计算</button>
+      <button id="btnCsv">导入 CSV</button>
+      <input type="file" id="fileCsv" accept=".csv,.txt" style="display:none">
+      <select id="demo">
+        <option value="">载入示例数据…</option>
+        <option value="score">某班 30 人考试成绩（含一个极低分）</option>
+        <option value="income">某地居民月收入（典型右偏）</option>
+        <option value="height">某班学生身高（近似正态）</option>
+        <option value="group">分组示例：A 班 / B 班成绩（两组对比）</option>
+      </select>
+      <span style="flex:1"></span>
+      <select id="dist">
+        <option value="normal">正态分布</option>
+        <option value="lognormal">右偏（对数正态）</option>
+        <option value="left">左偏</option>
+        <option value="bimodal">双峰</option>
+        <option value="uniform">均匀分布</option>
+      </select>
+      <input type="number" id="numN" value="40" min="5" max="500" style="width:74px" title="样本量">
+      <button id="btnGen">随机生成</button>
+    </div>
+    <div class="slider-box">
+      <div class="lbl">
+        <span>离群点注入：在原数据中追加一个极端观测值 = 均值 + k × 标准差</span>
+        <b id="kVal">k = 0</b>
+      </div>
+      <input type="range" id="kSlider" min="0" max="10" step="0.5" value="0">
+    </div>
+    <p class="hint" id="parseInfo">尚未载入数据。</p>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <h3 class="sec">集中趋势度量</h3>
+      <div id="mCentral"></div>
+    </div>
+    <div class="card">
+      <h3 class="sec t">离散程度度量</h3>
+      <div id="mDisp"></div>
+    </div>
+    <div class="card">
+      <h3 class="sec a">分布形态度量</h3>
+      <div id="mShape"></div>
+    </div>
+  </div>
+
+  <div class="card bar">
+    <h2>② 图形展示 <span class="tag">四张图随数据同步更新</span></h2>
+    <button id="btnExport">下载图片 PNG</button>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <p class="chart-title">图 1　直方图 + 正态参考曲线</p>
+      <canvas id="cHist"></canvas>
+    </div>
+    <div class="card">
+      <p class="chart-title">图 2　箱线图（含 1.5×IQR 异常值栅栏）</p>
+      <canvas id="cBox"></canvas>
+    </div>
+    <div class="card">
+      <p class="chart-title">图 3　Q-Q 图（对照正态分布）</p>
+      <canvas id="cQQ"></canvas>
+    </div>
+    <div class="card">
+      <p class="chart-title">图 4　经验累积分布 ECDF</p>
+      <canvas id="cEcdf"></canvas>
+    </div>
+  </div>
+
+  <div class="card" id="grpCard" style="display:none">
+    <h2>分组对比 <span class="tag">导入带组名的 CSV，或选“分组示例”后自动出现</span></h2>
+    <p class="chart-title">图 5　分组箱线图（每组各自一套栅栏）</p>
+    <canvas id="cGroupBox" style="height:270px"></canvas>
+    <div id="grpTable"></div>
+  </div>
+
+  <div class="card">
+    <h2>③ 自动解读 <span class="tag">根据当前数据实时生成</span></h2>
+    <div class="concl" id="concl"></div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>④ 常用软件实现对照（Excel / SPSS / R / Python）</summary>
+      <table>
+        <tr><th>指标</th><th>Excel</th><th>SPSS</th><th>R</th><th>Python</th></tr>
+        <tr><td>算术均值</td><td><code>=AVERAGE(A1:A30)</code></td><td>分析→描述统计→描述</td><td><code>mean(x)</code></td><td><code>np.mean(x)</code></td></tr>
+        <tr><td>中位数</td><td><code>=MEDIAN(A1:A30)</code></td><td>同上（中位数）</td><td><code>median(x)</code></td><td><code>np.median(x)</code></td></tr>
+        <tr><td>众数</td><td><code>=MODE.SNGL(A1:A30)</code></td><td>分析→描述统计→频率</td><td>自定义 / <code>modeest::mfv</code></td><td><code>statistics.mode(x)</code></td></tr>
+        <tr><td>四分位数</td><td><code>=QUARTILE.INC(A1:A30,1)</code></td><td>描述统计中的百分位数</td><td><code>quantile(x,0.25)</code></td><td><code>np.percentile(x,25)</code></td></tr>
+        <tr><td>样本标准差</td><td><code>=STDEV.S(A1:A30)</code></td><td>描述统计（标准差，n−1）</td><td><code>sd(x)</code></td><td><code>np.std(x, ddof=1)</code></td></tr>
+        <tr><td>总体标准差</td><td><code>=STDEV.P(A1:A30)</code></td><td>需手动换算 / 语法</td><td>—</td><td><code>np.std(x, ddof=0)</code></td></tr>
+        <tr><td>变异系数</td><td><code>=STDEV.S(A1:A30)/AVERAGE(A1:A30)</code></td><td>描述统计（变异系数）</td><td><code>sd(x)/mean(x)</code></td><td><code>scipy.stats.variation(x)</code></td></tr>
+        <tr><td>偏度</td><td><code>=SKEW(A1:A30)</code></td><td>描述统计（偏度，G1）</td><td><code>e1071::skewness(x, type=2)</code></td><td><code>scipy.stats.skew(x, bias=False)</code></td></tr>
+        <tr><td>峰度（超额）</td><td><code>=KURT(A1:A30)</code></td><td>描述统计（峰度，G2）</td><td><code>e1071::kurtosis(x, type=2)</code></td><td><code>scipy.stats.kurtosis(x, bias=False)</code></td></tr>
+        <tr><td>直方图</td><td>插入→图表→直方图</td><td>图表构建器→直方图</td><td><code>hist(x)</code></td><td><code>plt.hist(x, bins=…)</code></td></tr>
+        <tr><td>箱线图</td><td>插入→图表→箱形图</td><td>图表构建器→箱图</td><td><code>boxplot(x)</code></td><td><code>plt.boxplot(x)</code></td></tr>
+        <tr><td>正态性检验</td><td>需数据分析工具库</td><td>分析→非参数检验→1-样本 K-S</td><td><code>shapiro.test(x)</code></td><td><code>scipy.stats.shapiro(x)</code></td></tr>
+      </table>
+      <p class="hint">注意：Excel 的 <code>SKEW</code>/<code>KURT</code> 与 SPSS 的偏度/峰度都是「样本调整」口径（G1、G2），默认正态分布峰度记作 0。用 <code>scipy.stats.skew(x)</code> 不写 <code>bias=False</code> 会得到有偏估计，数值对不上，这是最常见的一处坑。</p>
+    </details>
+  </div>
+
+  <footer>所有计算都在你的浏览器本地完成，数据不会上传到任何服务器 · 单文件离线可用</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ========== 基础数学 ========== */
+function sum(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s;}
+function mean(a){return a.length?sum(a)/a.length:NaN;}
+function variance(a,sample){
+  var n=a.length,m=mean(a),ss=0;
+  for(var i=0;i<n;i++){var d=a[i]-m;ss+=d*d;}
+  return ss/(sample?(n-1):n);
+}
+function quantileSorted(s,p){
+  var n=s.length;
+  if(!n)return NaN;
+  if(n===1)return s[0];
+  var h=(n-1)*p, lo=Math.floor(h), hi=Math.ceil(h);
+  return s[lo]+(h-lo)*(s[hi]-s[lo]);
+}
+function skewness(a){
+  var n=a.length;
+  if(n<3)return NaN;
+  var m=mean(a),sd=Math.sqrt(variance(a,true));
+  if(!sd)return 0;
+  var m3=0;
+  for(var i=0;i<n;i++)m3+=Math.pow((a[i]-m)/sd,3);
+  return n/((n-1)*(n-2))*m3;
+}
+function kurtosisExcess(a){
+  var n=a.length;
+  if(n<4)return NaN;
+  var m=mean(a),sd=Math.sqrt(variance(a,true));
+  if(!sd)return 0;
+  var m4=0;
+  for(var i=0;i<n;i++)m4+=Math.pow((a[i]-m)/sd,4);
+  return (n*(n+1))/((n-1)*(n-2)*(n-3))*m4 - 3*(n-1)*(n-1)/((n-2)*(n-3));
+}
+function trimmedMean(sorted,prop){
+  var k=Math.floor(sorted.length*prop);
+  if(sorted.length-2*k<1)return mean(sorted);
+  return mean(sorted.slice(k,sorted.length-k));
+}
+function modesOf(a){
+  var map={},best=0,i;
+  for(i=0;i<a.length;i++){var k=String(a[i]);map[k]=(map[k]||0)+1;if(map[k]>best)best=map[k];}
+  if(best<=1)return [];
+  var out=[];
+  for(var k2 in map)if(map[k2]===best)out.push(Number(k2));
+  return out.sort(function(x,y){return x-y;});
+}
+function normInv(p){
+  if(p<=0)return -8; if(p>=1)return 8;
+  var a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+  var b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+  var c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+  var d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+  var pl=0.02425,q,r;
+  if(p<pl){
+    q=Math.sqrt(-2*Math.log(p));
+    return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  }
+  if(p<=1-pl){
+    q=p-0.5;r=q*q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+  }
+  q=Math.sqrt(-2*Math.log(1-p));
+  return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+}
+function normPdf(z){return Math.exp(-0.5*z*z)/Math.sqrt(2*Math.PI);}
+/* 正态累积分布（Abramowitz-Stegun 近似，误差 < 1e-7） */
+function normCdf(z){
+  var t=1/(1+0.2316419*Math.abs(z));
+  var d=0.3989423*Math.exp(-z*z/2);
+  var p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));
+  return z>0?(1-p):p;
+}
+/* Kolmogorov-Smirnov 正态性检验（参数由样本估计 → Lilliefors 情形） */
+function ksTest(a,m,sd){
+  var n=a.length;
+  if(n<5||!sd)return {D:NaN,p:NaN};
+  var s=a.slice().sort(function(x,y){return x-y;}),i;
+  var D=0;
+  for(i=0;i<n;i++){
+    var F=normCdf((s[i]-m)/sd);
+    var d1=Math.abs(F-i/n), d2=Math.abs((i+1)/n-F);
+    if(d1>D)D=d1;
+    if(d2>D)D=d2;
+  }
+  var lam=(Math.sqrt(n)+0.12+0.11/Math.sqrt(n))*D;
+  var p=0;
+  for(var k=1;k<=100;k++){
+    var term=Math.exp(-2*k*k*lam*lam);
+    p+=2*Math.pow(-1,k-1)*term;
+    if(term<1e-12)break;
+  }
+  p=Math.max(0,Math.min(1,p));
+  return {D:D,p:p};
+}
+function esc(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function randn(){
+  var u=0,v=0;
+  while(!u)u=Math.random();
+  while(!v)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function fmt(x,d){
+  d=(d===undefined)?2:d;
+  if(x===null||x===undefined||!isFinite(x))return "—";
+  var s=Number(x).toFixed(d);
+  if(s.indexOf(".")>=0)s=s.replace(/0+$/,"").replace(/\.$/,"");
+  return s;
+}
+function pct(x,d){
+  if(!isFinite(x))return "—";
+  return fmt(x*100,(d===undefined)?1:d)+"%";
+}
+
+/* ========== 状态 ========== */
+var baseData=[];
+var groupData=null;
+
+/* ========== 数据解析与生成 ========== */
+function parseText(txt){
+  var parts=txt.split(/[\s,，;；、\t\r\n]+/);
+  var out=[];
+  for(var i=0;i<parts.length;i++){
+    var p=parts[i].trim();
+    if(!p)continue;
+    var v=Number(p);
+    if(isFinite(v))out.push(v);
+  }
+  return out;
+}
+var DEMOS={
+  score:[92,88,79,85,91,76,83,95,68,88,90,74,82,86,93,71,84,77,89,94,80,87,72,96,85,81,90,78,83,8],
+  income:[3.2,3.8,4.1,4.5,5.2,5.8,6.3,6.9,7.5,8.2,9.1,10.5,11.8,13.2,15.6,18.4,22.5,28.3,35.2,48.6,4.2,5.5,6.7,7.8,9.6,12.4,16.8,24.1,6.1,8.8],
+  height:[158,162,165,167,168,169,170,171,172,173,174,175,176,177,178,180,182,155,183,166,170,174,169,172,171,175,168,177,164,173]
+};
+var GROUP_DEMO={
+  order:["A 班","B 班"],
+  groups:{
+    "A 班":[78,82,85,88,90,76,84,91,87,80,83,86,79,92,81,77,85,88,74,90],
+    "B 班":[85,88,90,92,95,84,89,93,91,87,86,94,88,96,90,83,92,87,89,91]
+  }
+};
+function genSample(type,n){
+  var out=[],i;
+  if(type==="normal"){
+    for(i=0;i<n;i++)out.push(70+12*randn());
+  }else if(type==="lognormal"){
+    for(i=0;i<n;i++)out.push(Math.exp(3.6+0.55*randn()));
+  }else if(type==="left"){
+    for(i=0;i<n;i++)out.push(100-Math.exp(3.6+0.55*randn()));
+  }else if(type==="bimodal"){
+    for(i=0;i<n;i++)out.push(i%2?40+5*randn():78+6*randn());
+  }else{
+    for(i=0;i<n;i++)out.push(50+40*Math.random());
+  }
+  for(i=0;i<out.length;i++)out[i]=Math.round(out[i]*100)/100;
+  return out;
+}
+
+/* ========== 统计汇总 ========== */
+function computeStats(a){
+  var n=a.length;
+  var sorted=a.slice().sort(function(x,y){return x-y;});
+  var m=mean(a);
+  var vS=variance(a,true), vP=variance(a,false);
+  var sdS=Math.sqrt(vS), sdP=Math.sqrt(vP);
+  var q1=quantileSorted(sorted,0.25), med=quantileSorted(sorted,0.5), q3=quantileSorted(sorted,0.75);
+  var iqr=q3-q1;
+  var madList=[],i;
+  for(i=0;i<n;i++)madList.push(Math.abs(a[i]-m));
+  var mad=mean(madList);
+  var lo=q1-1.5*iqr, hi=q3+1.5*iqr;
+  var outliers=[];
+  for(i=0;i<n;i++)if(a[i]<lo||a[i]>hi)outliers.push(a[i]);
+  var sk=skewness(a), ku=kurtosisExcess(a);
+  var jb=isFinite(sk)&&isFinite(ku)?(n/6)*(sk*sk+ku*ku/4):NaN;
+  var jbP=isFinite(jb)?Math.exp(-jb/2):NaN;
+  var ks=ksTest(a,m,sdS);
+  var pos=true;
+  for(i=0;i<n;i++)if(a[i]<=0){pos=false;break;}
+  var geo=pos?Math.exp(mean(a.map(Math.log))):NaN;
+  return {
+    n:n, sorted:sorted, min:sorted[0], max:sorted[n-1],
+    range:sorted[n-1]-sorted[0], m:m, med:med, q1:q1, q3:q3, iqr:iqr,
+    modes:modesOf(a), mad:mad, tm:trimmedMean(sorted,0.1), geo:geo,
+    vS:vS, vP:vP, sdS:sdS, sdP:sdP, cv:sdS/m, se:sdS/Math.sqrt(n),
+    sk:sk, ku:ku, lo:lo, hi:hi, outliers:outliers, jb:jb, jbP:jbP, ks:ks
+  };
+}
+
+/* ========== 指标渲染 ========== */
+function kv(k,v,unit){
+  return '<div class="metric"><span class="k">'+k+'</span><span class="v">'+v+
+    (unit?'<small>'+unit+'</small>':'')+'</span></div>';
+}
+function renderMetrics(st){
+  var modeTxt=st.modes.length?(st.modes.length>4?st.modes.slice(0,4).join(", ")+" 等":st.modes.join(", ")):"无（各值均唯一）";
+  document.getElementById("mCentral").innerHTML=
+    kv("样本量 n",st.n)+
+    kv("算术均值",fmt(st.m))+
+    kv("中位数 P50",fmt(st.med))+
+    kv("众数",modeTxt)+
+    kv("P25 / P75",fmt(st.q1)+" / "+fmt(st.q3))+
+    kv("截尾均值 (10%)",fmt(st.tm))+
+    kv("几何均值",isFinite(st.geo)?fmt(st.geo):"—","仅当数据全为正")+
+    kv("最小值 / 最大值",fmt(st.min)+" / "+fmt(st.max));
+
+  document.getElementById("mDisp").innerHTML=
+    kv("极差 R",fmt(st.range))+
+    kv("四分位距 IQR",fmt(st.iqr))+
+    kv("样本方差 s²",fmt(st.vS,3),"n−1")+
+    kv("样本标准差 s",fmt(st.sdS,3),"n−1")+
+    kv("总体标准差 σ",fmt(st.sdP,3),"n")+
+    kv("平均绝对偏差 MAD",fmt(st.mad))+
+    kv("变异系数 CV",isFinite(st.cv)?pct(st.cv):"—")+
+    kv("标准误 SE",fmt(st.se,3),"s/√n");
+
+  var skK=isFinite(st.sk)?(st.sk>0.5?"右偏":st.sk<-0.5?"左偏":"大致对称"):"—";
+  var kuK=isFinite(st.ku)?(st.ku>1?"尖峰厚尾":st.ku<-1?"平顶薄尾":"接近正态"):"—";
+  document.getElementById("mShape").innerHTML=
+    kv("偏度 G1",isFinite(st.sk)?fmt(st.sk,3)+' <span class="pill">'+skK+'</span>':"—")+
+    kv("峰度 G2（超额）",isFinite(st.ku)?fmt(st.ku,3)+' <span class="pill">'+kuK+'</span>':"—")+
+    kv("异常值个数",st.outliers.length+(st.outliers.length?' 个':'')+
+      (st.outliers.length?'<span class="pill warn">需核查</span>':''))+
+    kv("异常值栅栏",fmt(st.lo)+" ~ "+fmt(st.hi))+
+    kv("Jarque-Bera 统计量",isFinite(st.jb)?fmt(st.jb,2):"—")+
+    kv("JB 检验 p 值",isFinite(st.jbP)?(st.jbP<0.0001?"&lt; 0.0001":fmt(st.jbP,4)):"—")+
+    kv("K-S 统计量 D",isFinite(st.ks.D)?fmt(st.ks.D,4):"—")+
+    kv("K-S 检验 p 值",isFinite(st.ks.p)?(st.ks.p<0.0001?"&lt; 0.0001":fmt(st.ks.p,4)):"—")+
+    kv("正态性判断",isFinite(st.jbP)?(st.jbP<0.05?'<span class="pill warn">拒绝正态</span>':'<span class="pill ok">不拒绝正态</span>'):"—");
+}
+
+/* ========== 绘图 ========== */
+function fit(cv){
+  var dpr=window.devicePixelRatio||1;
+  var w=cv.clientWidth||600, h=cv.clientHeight||248;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  var ctx=cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  ctx.font='11px "Microsoft YaHei",sans-serif';
+  return {ctx:ctx,w:w,h:h};
+}
+function niceTicks(min,max,count){
+  if(!(max>min)){max=min+1;min=min-1;}
+  var span=max-min, step=Math.pow(10,Math.floor(Math.log(span/count)/Math.LN10));
+  var err=span/count/step;
+  if(err>=7.5)step*=10; else if(err>=3.5)step*=5; else if(err>=1.5)step*=2;
+  var start=Math.ceil(min/step)*step, ticks=[];
+  for(var v=start;v<=max+step*1e-6;v+=step)ticks.push(Math.round(v/step)*step);
+  return ticks;
+}
+function frame(ctx,w,h,pad,xmin,xmax,ymin,ymax,xlab,hideY,hideX){
+  var i,x,y;
+  ctx.save();
+  ctx.strokeStyle="#eef1f5"; ctx.lineWidth=1;
+  var yt=niceTicks(ymin,ymax,4);
+  for(i=0;i<yt.length;i++){
+    if(yt[i]<ymin||yt[i]>ymax)continue;
+    y=h-pad.b-(yt[i]-ymin)/(ymax-ymin)*(h-pad.t-pad.b);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+    if(!hideY){
+      ctx.fillStyle="#9ca3af";ctx.textAlign="right";ctx.textBaseline="middle";
+      ctx.fillText(fmt(yt[i],1),pad.l-6,y);
+    }
+  }
+  if(!hideX){
+    var xt=niceTicks(xmin,xmax,5);
+    for(i=0;i<xt.length;i++){
+      if(xt[i]<xmin||xt[i]>xmax)continue;
+      x=pad.l+(xt[i]-xmin)/(xmax-xmin)*(w-pad.l-pad.r);
+      ctx.fillStyle="#9ca3af";ctx.textAlign="center";ctx.textBaseline="top";
+      ctx.fillText(fmt(xt[i],1),x,h-pad.b+6);
+    }
+  }
+  ctx.strokeStyle="#d1d5db";ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,h-pad.b);ctx.lineTo(w-pad.r,h-pad.b);
+  ctx.stroke();
+  if(xlab){
+    ctx.fillStyle="#9ca3af";ctx.textAlign="right";ctx.textBaseline="bottom";
+    ctx.fillText(xlab,w-pad.r,h-2);
+  }
+  ctx.restore();
+}
+function drawHist(a,st){
+  var o=fit(document.getElementById("cHist"));
+  var ctx=o.ctx,w=o.w,h=o.h;
+  var pad={l:44,r:12,t:14,b:30};
+  var xmin=st.min,xmax=st.max;
+  var span=xmax-xmin||1;
+  xmin-=span*0.04; xmax+=span*0.04;
+  var n=a.length;
+  var nb=Math.max(4,Math.ceil(Math.log(n)/Math.LN2)+1);
+  var bw=(xmax-xmin)/nb;
+  var counts=new Array(nb);
+  for(var i=0;i<nb;i++)counts[i]=0;
+  for(i=0;i<n;i++){
+    var idx=Math.floor((a[i]-xmin)/bw);
+    if(idx<0)idx=0; if(idx>=nb)idx=nb-1;
+    counts[idx]++;
+  }
+  var ymax=Math.max.apply(null,counts)||1;
+  ymax=ymax*1.18;
+  frame(ctx,w,h,pad,xmin,xmax,0,ymax,"数值");
+  var base=h-pad.b;
+  for(i=0;i<nb;i++){
+    var x0=pad.l+(xmin+i*bw-xmin)/(xmax-xmin)*(w-pad.l-pad.r);
+    var x1=pad.l+(xmin+(i+1)*bw-xmin)/(xmax-xmin)*(w-pad.l-pad.r);
+    var y=base-(counts[i]/ymax)*(h-pad.t-pad.b);
+    ctx.fillStyle="rgba(37,99,235,.55)";
+    ctx.fillRect(x0+0.5,y,x1-x0-1,base-y);
+    ctx.strokeStyle="rgba(37,99,235,.9)";
+    ctx.strokeRect(x0+0.5,y,x1-x0-1,base-y);
+  }
+  // 正态参考曲线
+  var m=st.m, sd=st.sdS;
+  if(sd>0){
+    ctx.beginPath();
+    ctx.strokeStyle="#e11d48"; ctx.lineWidth=2;
+    for(var px=0;px<=200;px++){
+      var xv=xmin+(xmax-xmin)*px/200;
+      var dens=normPdf((xv-m)/sd)/sd;
+      var yv=base-(dens*n*bw/ymax)*(h-pad.t-pad.b);
+      if(px===0)ctx.moveTo(pad.l,yv); else ctx.lineTo(pad.l+(xv-xmin)/(xmax-xmin)*(w-pad.l-pad.r),yv);
+    }
+    ctx.stroke();
+  }
+  // 图例
+  ctx.fillStyle="rgba(37,99,235,.7)";ctx.fillRect(pad.l+4,pad.t+2,10,10);
+  ctx.fillStyle="#6b7280";ctx.textAlign="left";ctx.textBaseline="top";
+  ctx.fillText("实际频数",pad.l+18,pad.t+2);
+  ctx.fillStyle="#e11d48";ctx.fillRect(pad.l+84,pad.t+2,10,10);
+  ctx.fillStyle="#6b7280";ctx.fillText("正态曲线",pad.l+98,pad.t+2);
+}
+function drawBox(a,st){
+  var o=fit(document.getElementById("cBox"));
+  var ctx=o.ctx,w=o.w,h=o.h;
+  var pad={l:44,r:16,t:16,b:30};
+  var xmin=st.min,xmax=st.max,span=xmax-xmin||1;
+  xmin-=span*0.06;xmax+=span*0.06;
+  frame(ctx,w,h,pad,xmin,xmax,0,1,"",true);
+  var X=function(v){return pad.l+(v-xmin)/(xmax-xmin)*(w-pad.l-pad.r);};
+  var cy=(pad.t+h-pad.b)/2;
+  var bh=68;
+  var inl=a.filter(function(v){return v>=st.lo&&v<=st.hi;});
+  var wLo=inl.length?Math.min.apply(null,inl):st.q1;
+  var wHi=inl.length?Math.max.apply(null,inl):st.q3;
+  // 须线
+  ctx.strokeStyle="#475569";ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(X(wLo),cy);ctx.lineTo(X(st.q1),cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(st.q3),cy);ctx.lineTo(X(wHi),cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(wLo),cy-bh/2);ctx.lineTo(X(wLo),cy+bh/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(wHi),cy-bh/2);ctx.lineTo(X(wHi),cy+bh/2);ctx.stroke();
+  // 箱体
+  ctx.fillStyle="rgba(13,148,136,.18)";
+  ctx.fillRect(X(st.q1),cy-bh/2,X(st.q3)-X(st.q1),bh);
+  ctx.strokeStyle="#0d9488";ctx.lineWidth=1.6;
+  ctx.strokeRect(X(st.q1),cy-bh/2,X(st.q3)-X(st.q1),bh);
+  // 中位数
+  ctx.strokeStyle="#e11d48";ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(X(st.med),cy-bh/2);ctx.lineTo(X(st.med),cy+bh/2);ctx.stroke();
+  // 异常值
+  ctx.fillStyle="#e11d48";
+  var i;
+  for(i=0;i<st.outliers.length;i++){
+    ctx.beginPath();ctx.arc(X(st.outliers[i]),cy,4,0,Math.PI*2);ctx.fill();
+  }
+  // 标签
+  ctx.fillStyle="#6b7280";ctx.textAlign="center";ctx.textBaseline="top";
+  ctx.fillText("Q1 "+fmt(st.q1),X(st.q1),cy+bh/2+8);
+  ctx.fillStyle="#e11d48";
+  ctx.fillText("中位数 "+fmt(st.med),X(st.med),cy-bh/2-18);
+  ctx.fillStyle="#6b7280";
+  ctx.fillText("Q3 "+fmt(st.q3),X(st.q3),cy+bh/2+8);
+  // 栅栏提示（放左上角，避开 x 轴刻度）
+  ctx.fillStyle="#9ca3af";ctx.textAlign="left";ctx.textBaseline="top";
+  ctx.fillText("异常值栅栏 ["+fmt(st.lo)+", "+fmt(st.hi)+"]　红点 = 异常值",pad.l+4,pad.t);
+}
+function drawQQ(a,st){
+  var o=fit(document.getElementById("cQQ"));
+  var ctx=o.ctx,w=o.w,h=o.h;
+  var pad={l:44,r:16,t:16,b:30};
+  var s=st.sorted,n=s.length;
+  var zmin=normInv(0.5/n),zmax=normInv(1-0.5/n);
+  var zp=Math.max(Math.abs(zmin),Math.abs(zmax))*1.08;
+  var ymin=st.min,ymax=st.max,span=ymax-ymin||1;
+  ymin-=span*0.06;ymax+=span*0.06;
+  frame(ctx,w,h,pad,-zp,zp,ymin,ymax,"理论分位数 z");
+  var X=function(z){return pad.l+(z+zp)/(2*zp)*(w-pad.l-pad.r);};
+  var Y=function(v){return h-pad.b-(v-ymin)/(ymax-ymin)*(h-pad.t-pad.b);};
+  // 参考线
+  ctx.strokeStyle="#cbd5e1";ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+  ctx.beginPath();
+  ctx.moveTo(X(-zp),Y(st.m-st.sdS*zp));
+  ctx.lineTo(X(zp),Y(st.m+st.sdS*zp));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // 点
+  ctx.fillStyle="rgba(37,99,235,.8)";
+  for(var i=0;i<n;i++){
+    var p=(i+0.5)/n;
+    var z=normInv(p);
+    ctx.beginPath();ctx.arc(X(z),Y(s[i]),3.2,0,Math.PI*2);ctx.fill();
+  }
+  ctx.fillStyle="#9ca3af";ctx.textAlign="left";ctx.textBaseline="bottom";
+  ctx.fillText("点越贴近虚线，越接近正态分布",pad.l,h-2);
+}
+function drawEcdf(a,st){
+  var o=fit(document.getElementById("cEcdf"));
+  var ctx=o.ctx,w=o.w,h=o.h;
+  var pad={l:44,r:16,t:16,b:30};
+  var s=st.sorted,n=s.length;
+  var xmin=st.min,xmax=st.max,span=xmax-xmin||1;
+  xmin-=span*0.04;xmax+=span*0.04;
+  frame(ctx,w,h,pad,xmin,xmax,0,1,"数值");
+  var X=function(v){return pad.l+(v-xmin)/(xmax-xmin)*(w-pad.l-pad.r);};
+  var Y=function(v){return h-pad.b-v*(h-pad.t-pad.b);};
+  ctx.strokeStyle="#0d9488";ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(X(xmin),Y(0));
+  for(var i=0;i<n;i++){
+    ctx.lineTo(X(s[i]),Y(i/n));
+    ctx.lineTo(X(s[i]),Y((i+1)/n));
+  }
+  ctx.lineTo(X(xmax),Y(1));
+  ctx.stroke();
+  // 中位数竖线
+  ctx.strokeStyle="#e11d48";ctx.setLineDash([5,4]);ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(X(st.med),Y(0));ctx.lineTo(X(st.med),Y(0.5));ctx.stroke();
+  ctx.lineTo(X(st.med),Y(0.5));ctx.lineTo(X(xmin),Y(0.5));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="#e11d48";ctx.textAlign="left";ctx.textBaseline="middle";
+  ctx.fillText("中位数处 F = 0.5",X(st.med)+6,Y(0.5)-12);
+}
+
+/* ========== 分组对比 ========== */
+function drawGroupBox(){
+  var cv=document.getElementById("cGroupBox");
+  if(!cv||!groupData)return;
+  var o=fit(cv), ctx=o.ctx, w=o.w, h=o.h;
+  var gd=groupData;
+  var pad={l:48,r:16,t:26,b:50};
+  var gmin=Infinity,gmax=-Infinity,i,j;
+  for(i=0;i<gd.order.length;i++){
+    var arr=gd.groups[gd.order[i]];
+    for(j=0;j<arr.length;j++){
+      if(arr[j]<gmin)gmin=arr[j];
+      if(arr[j]>gmax)gmax=arr[j];
+    }
+  }
+  var sp=(gmax-gmin)||1;
+  var ymin=gmin-sp*0.1, ymax=gmax+sp*0.1;
+  frame(ctx,w,h,pad,0,1,ymin,ymax,"",false,true);
+  var Y=function(v){return h-pad.b-(v-ymin)/(ymax-ymin)*(h-pad.t-pad.b);};
+  var gw=(w-pad.l-pad.r)/gd.order.length;
+  for(i=0;i<gd.order.length;i++){
+    var name=gd.order[i];
+    var a=gd.groups[name];
+    var st=computeStats(a);
+    var cx=pad.l+gw*(i+0.5);
+    var bw=Math.min(92,gw*0.34);
+    var inl=[];
+    for(j=0;j<a.length;j++)if(a[j]>=st.lo&&a[j]<=st.hi)inl.push(a[j]);
+    var wLo=inl.length?Math.min.apply(null,inl):st.q1;
+    var wHi=inl.length?Math.max.apply(null,inl):st.q3;
+    ctx.strokeStyle="#94a3b8";ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.moveTo(cx,Y(wLo));ctx.lineTo(cx,Y(st.q1));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,Y(st.q3));ctx.lineTo(cx,Y(wHi));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx-bw/3,Y(wLo));ctx.lineTo(cx+bw/3,Y(wLo));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx-bw/3,Y(wHi));ctx.lineTo(cx+bw/3,Y(wHi));ctx.stroke();
+    var top=Y(st.q3), bot=Y(st.q1);
+    if(bot-top<1)bot=top+1;
+    ctx.fillStyle="rgba(37,99,235,.14)";
+    ctx.fillRect(cx-bw/2,top,bw,bot-top);
+    ctx.strokeStyle="#2563eb";ctx.lineWidth=1.6;
+    ctx.strokeRect(cx-bw/2,top,bw,bot-top);
+    ctx.strokeStyle="#e11d48";ctx.lineWidth=2.4;
+    ctx.beginPath();ctx.moveTo(cx-bw/2,Y(st.med));ctx.lineTo(cx+bw/2,Y(st.med));ctx.stroke();
+    ctx.fillStyle="#e11d48";
+    for(j=0;j<st.outliers.length;j++){
+      ctx.beginPath();ctx.arc(cx,Y(st.outliers[j]),3.5,0,Math.PI*2);ctx.fill();
+    }
+    var my=Y(st.m);
+    ctx.fillStyle="#0d9488";
+    ctx.beginPath();
+    ctx.moveTo(cx,my-5);ctx.lineTo(cx+5,my);ctx.lineTo(cx,my+5);ctx.lineTo(cx-5,my);
+    ctx.closePath();ctx.fill();
+    ctx.fillStyle="#374151";ctx.textAlign="center";ctx.textBaseline="top";
+    ctx.font='12px "Microsoft YaHei",sans-serif';
+    ctx.fillText(name,cx,h-pad.b+20);
+    ctx.fillStyle="#9ca3af";ctx.font='11px "Microsoft YaHei",sans-serif';
+    ctx.fillText("n="+st.n+"　中位="+fmt(st.med),cx,h-pad.b+35);
+  }
+  ctx.textAlign="left";ctx.textBaseline="top";
+  ctx.font='11px "Microsoft YaHei",sans-serif';
+  ctx.fillStyle="#6b7280";
+  ctx.fillText("红横线 = 中位数　青菱形 = 均值　红点 = 异常值",pad.l,pad.t-16);
+}
+function renderGroupTable(){
+  var gd=groupData;
+  if(!gd)return;
+  var s="<table><tr><th>组</th><th>n</th><th>均值</th><th>中位数</th><th>标准差 s</th><th>变异系数 CV</th><th>最小值</th><th>最大值</th></tr>";
+  for(var i=0;i<gd.order.length;i++){
+    var g=gd.order[i];
+    var st=computeStats(gd.groups[g]);
+    s+="<tr><td class='grp-name'>"+esc(g)+"</td><td>"+st.n+"</td><td>"+fmt(st.m)+"</td><td>"+fmt(st.med)+
+       "</td><td>"+fmt(st.sdS,3)+"</td><td>"+(isFinite(st.cv)?pct(st.cv):"—")+"</td><td>"+fmt(st.min)+"</td><td>"+fmt(st.max)+"</td></tr>";
+  }
+  s+="</table>";
+  document.getElementById("grpTable").innerHTML=s;
+}
+
+/* ========== CSV 导入 ========== */
+function readFileSmart(file,cb){
+  var fr=new FileReader();
+  fr.onload=function(){
+    var buf=fr.result, txt="";
+    try{ txt=new TextDecoder("utf-8").decode(buf); }catch(e){ txt=""; }
+    if(!txt||txt.indexOf("\uFFFD")>=0){
+      try{ txt=new TextDecoder("gbk").decode(buf); }catch(e){}
+    }
+    cb(txt);
+  };
+  fr.readAsArrayBuffer(file);
+}
+function parseCSV(text){
+  var lines=text.split(/\r\n|\n|\r/);
+  var rows=[];
+  for(var li=0;li<lines.length;li++){
+    var l=lines[li];
+    if(!l.trim())continue;
+    var cells=[],cur="",inQ=false;
+    for(var i=0;i<l.length;i++){
+      var c=l[i];
+      if(inQ){
+        if(c==='"'){ if(l[i+1]==='"'){cur+='"';i++;} else inQ=false; }
+        else cur+=c;
+      }else{
+        if(c==='"')inQ=true;
+        else if(c===','||c===';'||c==='\t'){ cells.push(cur.trim()); cur=""; }
+        else cur+=c;
+      }
+    }
+    cells.push(cur.trim());
+    rows.push(cells);
+  }
+  return rows;
+}
+function isNumStr(s){ return s!==""&&s!==null&&s!==undefined&&isFinite(Number(s)); }
+function handleTable(rows){
+  if(!rows||!rows.length){ alert("文件是空的或者读不出内容"); return; }
+  var start=0;
+  for(var ci=0;ci<rows[0].length;ci++){
+    var v=rows[0][ci];
+    if(v!==""&&!isNumStr(v)){ start=1; break; }
+  }
+  var body=rows.slice(start);
+  if(!body.length){ alert("没有读到数据行"); return; }
+  var ncol=0,i,r,c;
+  for(i=0;i<body.length;i++)if(body[i].length>ncol)ncol=body[i].length;
+  var numCols=[],txtCols=[];
+  for(c=0;c<ncol;c++){
+    var allNum=true,any=false;
+    for(r=0;r<body.length;r++){
+      if(!body[r]||body[r].length<=c)continue;
+      var val=body[r][c];
+      if(val===""||val===undefined||val===null)continue;
+      any=true;
+      if(!isNumStr(val)){ allNum=false; break; }
+    }
+    if(any)(allNum?numCols:txtCols).push(c);
+  }
+  if(!numCols.length){ alert("没找到数值列，请确认 CSV 里有一列是数字"); return; }
+  var valCol=numCols[0];
+  if(txtCols.length){
+    var gCol=txtCols[0], groups={}, order=[], nm;
+    for(r=0;r<body.length;r++){
+      if(!body[r])continue;
+      var g=(body[r][gCol]===undefined||body[r][gCol]==="")?"(空)":body[r][gCol];
+      var vv=body[r][valCol];
+      if(!isNumStr(vv))continue;
+      if(!groups[g]){ groups[g]=[]; order.push(g); }
+      groups[g].push(Number(vv));
+    }
+    if(!order.length){ alert("分组后没有有效数据"); return; }
+    setGroupData({order:order,groups:groups});
+  }else{
+    var arr=[];
+    for(r=0;r<body.length;r++){
+      if(!body[r])continue;
+      var v2=body[r][valCol];
+      if(isNumStr(v2))arr.push(Number(v2));
+    }
+    if(arr.length<2){ alert("有效数值少于 2 个"); return; }
+    clearGroup();
+    document.getElementById("kSlider").value=0;
+    setBase(arr);
+  }
+}
+function clearGroup(){
+  groupData=null;
+  var card=document.getElementById("grpCard");
+  if(card)card.style.display="none";
+  var t=document.getElementById("grpTable");
+  if(t)t.innerHTML="";
+}
+function setGroupData(gd){
+  groupData=gd;
+  var all=[],i,j;
+  for(i=0;i<gd.order.length;i++){
+    var arr=gd.groups[gd.order[i]];
+    for(j=0;j<arr.length;j++)all.push(arr[j]);
+  }
+  baseData=all;
+  document.getElementById("raw").value=all.join(", ");
+  document.getElementById("kSlider").value=0;
+  document.getElementById("grpCard").style.display="";
+  refresh();
+}
+
+/* ========== 导出图片 ========== */
+function exportPNG(){
+  var items=[
+    {id:"cHist",t:"图 1　直方图 + 正态参考曲线"},
+    {id:"cBox", t:"图 2　箱线图（1.5×IQR）"},
+    {id:"cQQ",  t:"图 3　Q-Q 图（对照正态）"},
+    {id:"cEcdf",t:"图 4　经验累积分布 ECDF"}
+  ];
+  var src0=document.getElementById("cHist");
+  if(!src0||!src0.width){ alert("还没有可导出的图形"); return; }
+  var CW=src0.width, CH=src0.height;
+  var sc=CW/(src0.clientWidth||CW);
+  var M=Math.round(26*sc), GAP=Math.round(16*sc), TITLE=Math.round(42*sc), HEAD=Math.round(66*sc);
+  var W=M*2+CW*2+GAP;
+  var H=HEAD+(TITLE+CH+GAP)*2+M;
+  var cv=document.createElement("canvas");
+  cv.width=W; cv.height=H;
+  var g=cv.getContext("2d");
+  g.fillStyle="#ffffff"; g.fillRect(0,0,W,H);
+  g.textAlign="left"; g.textBaseline="alphabetic";
+  g.fillStyle="#1f2937"; g.font="bold "+Math.round(19*sc)+'px "Microsoft YaHei"';
+  g.fillText("描述性统计图表",M,Math.round(30*sc));
+  g.fillStyle="#6b7280"; g.font=Math.round(12*sc)+'px "Microsoft YaHei"';
+  g.fillText("样本量 n = "+baseData.length+"　　导出时间 "+new Date().toLocaleString("zh-CN"),M,Math.round(50*sc));
+  for(var i=0;i<items.length;i++){
+    var src=document.getElementById(items[i].id);
+    var col=i%2, row=Math.floor(i/2);
+    var x=M+col*(CW+GAP);
+    var y=HEAD+row*(TITLE+CH+GAP);
+    g.fillStyle="#374151"; g.font=Math.round(13*sc)+'px "Microsoft YaHei"';
+    g.fillText(items[i].t,x,y+Math.round(15*sc));
+    var ty=y+Math.round(23*sc);
+    g.strokeStyle="#e5e7eb"; g.lineWidth=Math.max(1,Math.round(sc));
+    g.strokeRect(x,ty,CW,CH);
+    g.drawImage(src,x,ty,CW,CH);
+  }
+  cv.toBlob(function(blob){
+    if(!blob){ alert("导出失败，请换用 Chrome / Edge 再试"); return; }
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url;
+    a.download="描述性统计图表_"+new Date().toISOString().slice(0,10)+".png";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); },5000);
+  },"image/png");
+}
+
+/* ========== 自动解读 ========== */
+function renderConclusion(st,k,injVal,baseM,baseMed){
+  var out=[];
+  var diff=st.m-st.med;
+  var rel=st.sdS?Math.abs(diff)/st.sdS:0;
+  var t1="均值 <b>"+fmt(st.m)+"</b>，中位数 <b>"+fmt(st.med)+"</b>，均值比中位数"+(diff>=0?"高":"低")+" "+fmt(Math.abs(diff))+"。";
+  if(rel>0.12&&diff>0){
+    t1+="均值明显<b>高于</b>中位数，分布<b>右偏</b>——少数大值把均值往上拉，此时用中位数代表「典型水平」更稳健。";
+  }else if(rel>0.12&&diff<0){
+    t1+="均值明显<b>低于</b>中位数，分布<b>左偏</b>——少数小值把均值往下拖，同样建议用中位数描述典型水平。";
+  }else{
+    t1+="两者接近，分布大致<b>对称</b>，用均值代表集中趋势是合理的。";
+  }
+  out.push(t1);
+
+  var cvTxt;
+  if(!isFinite(st.cv)||isNaN(st.cv))cvTxt="变异系数无法计算（均值为 0 或数据含负值时无意义）";
+  else if(st.cv<0.15)cvTxt="CV = <b>"+pct(st.cv)+"</b>，小于 15%，数据相对<b>集中</b>，离散程度小";
+  else if(st.cv<0.3)cvTxt="CV = <b>"+pct(st.cv)+"</b>，处于 15%~30%，离散程度<b>中等</b>";
+  else cvTxt="CV = <b>"+pct(st.cv)+"</b>，超过 30%，数据<b class='hl'>离散程度较大</b>，组内差异明显";
+  out.push("极差 "+fmt(st.range)+"，标准差 s = "+fmt(st.sdS,3)+"（样本口径 n−1），"+cvTxt+
+    "。CV 的意义在于消除量纲，便于不同单位、不同量级的数据横向比较。");
+
+  var skTxt;
+  if(!isFinite(st.sk))skTxt="样本量太小，无法计算偏度";
+  else if(st.sk>1)skTxt="严重右偏（长尾拖向右）";
+  else if(st.sk>0.5)skTxt="中度右偏";
+  else if(st.sk<-1)skTxt="严重左偏（长尾拖向左）";
+  else if(st.sk<-0.5)skTxt="中度左偏";
+  else skTxt="接近对称";
+  var kuTxt;
+  if(!isFinite(st.ku))kuTxt="样本量太小，无法计算峰度";
+  else if(st.ku>1)kuTxt="尖峰厚尾，极端值出现概率高于正态";
+  else if(st.ku<-1)kuTxt="平顶薄尾，比正态分布更扁平";
+  else kuTxt="与正态分布接近";
+  out.push("偏度 G1 = <b>"+fmt(st.sk,3)+"</b>，"+skTxt+"；峰度 G2 = <b>"+fmt(st.ku,3)+"</b>（超额，正态为 0），"+kuTxt+"。");
+
+  if(st.outliers.length){
+    out.push("按 1.5×IQR 栅栏（["+fmt(st.lo)+", "+fmt(st.hi)+"]）判定，共有 <span class='hl'>"+st.outliers.length+
+      " 个异常值</span>："+st.outliers.map(function(v){return fmt(v);}).slice(0,6).join("、")+
+      (st.outliers.length>6?" 等":"")+"。处理前应核查是否为录入错误；若无误，应考虑用中位数或截尾均值 "+fmt(st.tm)+" 描述中心。");
+  }else{
+    out.push("按 1.5×IQR 栅栏判定，<b>未发现异常值</b>，数据整体较为规整。");
+  }
+
+  if(isFinite(st.jbP)){
+    out.push("Jarque-Bera 统计量 JB = "+fmt(st.jb,2)+"，对应 p 值 "+(st.jbP<0.0001?"&lt; 0.0001":fmt(st.jbP,4))+
+      (st.jbP<0.05?"，在 5% 水平下<b class='hl'>拒绝正态分布假设</b>，后续若做 t 检验、方差分析需谨慎，或考虑增大样本量。"
+                  :"，在 5% 水平下<b>不拒绝正态分布假设</b>，可以认为数据近似正态。"));
+  }
+  if(isFinite(st.ks.p)){
+    out.push("Kolmogorov-Smirnov 检验：D = <b>"+fmt(st.ks.D,4)+"</b>，近似 p 值 "+
+      (st.ks.p<0.0001?"&lt; 0.0001":fmt(st.ks.p,4))+
+      (st.ks.p<0.05?"，同样<b class='hl'>拒绝正态分布假设</b>。":"，不拒绝正态分布假设。")+
+      "（矩估计参数下的 K-S 属 Lilliefors 情形，此 p 值偏乐观，仅作参考。）");
+  }
+  if(isFinite(st.ks.p)&&isFinite(st.jbP)&&((st.ks.p<0.05)!==(st.jbP<0.05))){
+    out.push("提示：JB 与 K-S 的结论不一致，这<b>不是错误</b>。JB 由偏度、峰度构造，对<b>尾部极端值</b>格外敏感；"+
+      "K-S 看的是累积分布的最大偏差，对<b>分布中部</b>更敏感，且参数由样本估计时 p 值偏乐观。"+
+      "实际判断应把 直方图、Q-Q 图 和两个检验放在一起看，不要只凭一个 p 值下结论。");
+  }
+
+  if(k>0){
+    out.push("<span class='hl'>注意：当前注入了 1 个离群点，k = "+fmt(k,1)+"，其取值 = 原始均值 + "+fmt(k,1)+
+      "×原始标准差 = <b>"+fmt(injVal)+"</b>。</span>对比原始数据：均值由 "+fmt(baseM)+" 变为 <b>"+fmt(st.m)+"</b>，"+
+      "中位数由 "+fmt(baseMed)+" 变为 <b>"+fmt(st.med)+"</b>。可以清楚看到——<b>均值被明显拉动、标准差变大、箱线图多出一个红点，而中位数几乎不动</b>。这正是稳健性（robustness）的直观含义，也是收入、房价这类右偏数据常用中位数而非均值的原因。");
+  }
+  document.getElementById("concl").innerHTML=out.map(function(t){return "<p>"+t+"</p>";}).join("");
+}
+
+/* ========== 主流程 ========== */
+function refresh(){
+  var k=parseFloat(document.getElementById("kSlider").value)||0;
+  document.getElementById("kVal").textContent="k = "+fmt(k,1);
+
+  var data=baseData.slice();
+  var injVal=NaN, baseM=NaN, baseMed=NaN;
+  if(k>0&&baseData.length>=3){
+    var m0=mean(baseData), s0=Math.sqrt(variance(baseData,true));
+    baseM=m0;
+    baseMed=quantileSorted(baseData.slice().sort(function(x,y){return x-y;}),0.5);
+    injVal=m0+k*s0;
+    data.push(injVal);
+  }
+
+  var info=document.getElementById("parseInfo");
+  if(data.length<2){
+    info.textContent="数据不足：请至少输入 2 个数字。";
+    document.getElementById("mCentral").innerHTML="";
+    document.getElementById("mDisp").innerHTML="";
+    document.getElementById("mShape").innerHTML="";
+    document.getElementById("concl").innerHTML="";
+    return;
+  }
+  info.textContent="当前参与计算：n = "+data.length+
+    (k>0?"（原始 "+baseData.length+" 个 + 1 个注入的离群点）":"");
+
+  var st=computeStats(data);
+  renderMetrics(st);
+  drawHist(data,st);
+  drawBox(data,st);
+  drawQQ(data,st);
+  drawEcdf(data,st);
+  renderConclusion(st,k,injVal,baseM,baseMed);
+
+  if(groupData&&groupData.order&&groupData.order.length){
+    drawGroupBox();
+    renderGroupTable();
+  }
+}
+
+function setBase(arr){
+  baseData=arr;
+  document.getElementById("raw").value=arr.join(", ");
+  refresh();
+}
+
+/* 事件绑定 */
+document.getElementById("btnParse").addEventListener("click",function(){
+  var d=parseText(document.getElementById("raw").value);
+  if(d.length<2){
+    document.getElementById("parseInfo").textContent="没有解析到有效的数字，请检查输入内容。";
+    return;
+  }
+  baseData=d;
+  clearGroup();
+  document.getElementById("kSlider").value=0;
+  refresh();
+});
+
+document.getElementById("demo").addEventListener("change",function(){
+  var v=this.value;
+  if(!v)return;
+  if(v==="group"){
+    setGroupData({order:GROUP_DEMO.order.slice(),groups:{
+      "A 班":GROUP_DEMO.groups["A 班"].slice(),
+      "B 班":GROUP_DEMO.groups["B 班"].slice()
+    }});
+  }else{
+    document.getElementById("kSlider").value=0;
+    clearGroup();
+    setBase(DEMOS[v].slice());
+  }
+  this.value="";
+});
+
+document.getElementById("btnCsv").addEventListener("click",function(){
+  document.getElementById("fileCsv").click();
+});
+document.getElementById("fileCsv").addEventListener("change",function(){
+  var f=this.files&&this.files[0];
+  if(!f)return;
+  readFileSmart(f,function(txt){
+    try{ handleTable(parseCSV(txt)); }
+    catch(err){ alert("解析失败："+err.message); }
+  });
+  this.value="";
+});
+
+document.getElementById("btnExport").addEventListener("click",exportPNG);
+
+document.getElementById("btnGen").addEventListener("click",function(){
+  var n=parseInt(document.getElementById("numN").value,10)||40;
+  n=Math.max(5,Math.min(500,n));
+  document.getElementById("numN").value=n;
+  var type=document.getElementById("dist").value;
+  document.getElementById("kSlider").value=0;
+  clearGroup();
+  setBase(genSample(type,n));
+});
+
+document.getElementById("kSlider").addEventListener("input",refresh);
+
+var rt=null;
+window.addEventListener("resize",function(){
+  if(rt)clearTimeout(rt);
+  rt=setTimeout(refresh,120);
+});
+
+/* 初始载入示例 */
+setBase(DEMOS.score.slice());
+
+})();
+</script>
+</body>
+</html>
