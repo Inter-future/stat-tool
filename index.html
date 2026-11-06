@@ -1,786 +1,1060 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Correlation Studio · 相关性分析工作台</title>
-<script src="core/stat.js"></script>
-<script src="core/data.js"></script>
-<script src="core/io.js"></script>
-<script src="core/decide.js"></script>
-<script src="core/chart.js"></script>
-<script src="core/export.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>描述性统计工具箱</title>
 <style>
-:root{--bg:#f4f6fa;--panel:#fff;--ink:#172033;--muted:#68758a;--line:#e4e9f1;--blue:#2563eb;--blue2:#eaf1ff;--ok:#0f9f6e;--warn:#b8860b;--bad:#d93a3a}
+:root{
+  --bg:#f5f7fa; --card:#fff; --ink:#1f2937; --muted:#6b7280;
+  --line:#e5e7eb; --blue:#2563eb; --teal:#0d9488; --amber:#d97706; --rose:#e11d48;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 "Segoe UI","Microsoft YaHei UI",Arial,sans-serif}
-header{height:62px;background:#fffffff2;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:20;backdrop-filter:blur(10px)}
-.brand{display:flex;align-items:center;gap:11px;font-size:17px;font-weight:700}
-.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#3778f6,#72a7ff);display:grid;place-items:center;color:#fff;font-size:18px}
-.pill{font-size:11px;color:#2357b7;background:#eef4ff;border-radius:20px;padding:3px 9px;font-weight:600}
-.layout{display:grid;grid-template-columns:212px 1fr;min-height:calc(100vh - 62px)}
-aside{background:#f9fbff;border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:62px;height:calc(100vh - 62px);overflow:auto}
-.nav-title{font-size:11px;color:#94a0b2;font-weight:700;letter-spacing:1px;padding:10px 12px 6px}
-.nav{width:100%;border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:9px;color:#536176;font:inherit;cursor:pointer;margin:2px 0;display:flex;gap:9px;align-items:center}
-.nav:hover{background:#eef4ff}
-.nav.active{background:var(--blue2);color:var(--blue);font-weight:600}
-.nav:disabled{color:#b9c2cf;cursor:not-allowed;background:transparent}
-.nav small{margin-left:auto;font-size:10px;color:#a8b3c4}
-main{padding:24px 26px 70px;max-width:1180px;width:100%}
-h1{font-size:22px;margin:0 0 4px}
-.sub{color:var(--muted);font-size:13px;margin-bottom:18px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 6px 22px #23395b08}
-.card h3{font-size:15px;margin:0 0 14px;display:flex;gap:10px;align-items:center}
-.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:2px 9px;font-weight:400}
-.drop{border:1.5px dashed #b8c9e5;background:#f8fbff;border-radius:12px;padding:30px;text-align:center;cursor:pointer}
-.drop.drag{background:#edf4ff;border-color:var(--blue)}
-.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;cursor:pointer;font:inherit}
-.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn:hover{filter:brightness(.98)}
-select{border:1px solid #d8e0eb;border-radius:8px;padding:8px 10px;background:#fff;font:inherit;max-width:100%}
-table{width:100%;border-collapse:collapse;font-size:12.5px}
-th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-th{background:#f7f9fc;color:#526176;position:sticky;top:0}td.num{text-align:right;font-family:Consolas,monospace;white-space:nowrap}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
-.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-.kpi .k{font-size:12px;color:var(--muted)}.kpi .v{font-size:26px;font-weight:700;line-height:1.3}
-.kpi .v.small{font-size:16px}
-.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
-.b-continuous{background:#eaf1ff;color:#2357b7}.b-binary{background:#eefaf3;color:#0f7a56}
-.b-categorical{background:#fdf3e3;color:#9a6a12}.b-id{background:#f1eefc;color:#5b46a8}
-.b-constant,.b-text,.b-empty{background:#f1f3f7;color:#7a8699}
-.gA{background:#e9f8f1;color:#0b7a55}.gB{background:#fdf6e3;color:#9a6a12}.gC{background:#fdecec;color:#b32424}
-ul.find{margin:0;padding-left:20px}ul.find li{margin:7px 0}
-.lv-ok{color:#0b7a55}.lv-warn{color:#a3711a}.lv-error{color:#b32424}.lv-info{color:#455a75}
-.bar{height:8px;background:#eef1f6;border-radius:6px;overflow:hidden;min-width:90px}
-.bar i{display:block;height:100%;background:#e08a3c}
-.grid2{display:grid;grid-template-columns:1.05fr 1fr;gap:16px}
-canvas{width:100%;height:300px;display:block}
-.rule{background:#f7f9fc;border-left:3px solid #cfe0ff;padding:10px 12px;border-radius:6px;margin:8px 0;font-size:13px}
-.rule b{color:#2357b7;font-family:Consolas,monospace;margin-right:6px}
-ul.items{list-style:none;padding:0;margin:0}
-ul.items li{padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px}
-ul.items li:last-child{border:0}
-.ic{display:inline-block;width:18px;font-weight:700}.ic.y{color:var(--ok)}.ic.n{color:var(--bad)}
-.para{background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:16px 18px;line-height:2;font-size:13.5px}
-.para b{color:#1b3a6b}
-.warnbox{background:#fff9ec;border:1px solid #f0e0bc;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:13px}
-.hint{color:var(--muted);font-size:12px}
-.hidden{display:none!important}
-.empty{background:#fff;border:1px dashed var(--line);border-radius:12px;padding:40px;text-align:center;color:var(--muted)}
-/* 报告预览：与导出 HTML 保持同一套排版 */
-#reportPreview{max-width:820px;margin:0 auto;line-height:1.85;font-size:14px}
-#reportPreview h1{font-size:24px;margin:0 0 6px;letter-spacing:.5px}
-#reportPreview .meta{color:#6b7789;font-size:12.5px;margin-bottom:26px;line-height:2}
-#reportPreview .meta b{color:#33415c;font-weight:600}
-#reportPreview h2{font-size:17px;margin:28px 0 10px;padding-left:10px;border-left:4px solid #2563eb;line-height:1.3}
-#reportPreview h3{font-size:14.5px;margin:18px 0 8px;color:#33415c}
-#reportPreview p{margin:9px 0;text-align:justify}
-#reportPreview ul{margin:8px 0 8px 22px}#reportPreview li{margin:5px 0}
-#reportPreview table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
-#reportPreview th,#reportPreview td{border:1px solid #d9e0ea;padding:7px 10px;text-align:left}
-#reportPreview th{background:#f4f7fb;font-weight:600;position:static}
-#reportPreview td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
-#reportPreview figure{margin:16px 0;text-align:center}
-#reportPreview figure img{max-width:100%;border:1px solid #e6ebf2;border-radius:8px}
-#reportPreview figcaption{color:#6b7789;font-size:12px;margin-top:6px}
-#reportPreview .note{color:#6b7789;font-size:12px;margin:6px 0}
-iframe{width:100%;height:calc(100vh - 190px);border:1px solid var(--line);border-radius:10px;background:#fff}
-@media(max-width:900px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;display:flex;overflow:auto;padding:8px;border-right:0;border-bottom:1px solid var(--line)}.nav-title{display:none}.nav{white-space:nowrap;width:auto}.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}main{padding:14px}}
-@media print{header,aside,.no-print{display:none}.layout{grid-template-columns:1fr}main{padding:0}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
-</style></head>
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",system-ui,sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+header{background:linear-gradient(120deg,#1e3a8a 0%,#0d9488 100%);color:#fff;padding:24px 20px 20px}
+header .inner{max-width:1180px;margin:0 auto}
+header h1{margin:0;font-size:21px;letter-spacing:.5px;font-weight:600}
+header p{margin:5px 0 0;font-size:12.5px;opacity:.85}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card h2{margin:0 0 12px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .tag{font-size:11px;font-weight:400;color:var(--muted);background:#f3f4f6;padding:1px 8px;border-radius:20px}
+textarea{width:100%;min-height:84px;resize:vertical;padding:10px 12px;border:1px solid var(--line);
+  border-radius:8px;font-family:Consolas,Monaco,monospace;font-size:13px;line-height:1.55;outline:none;color:var(--ink)}
+textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 14px;
+  border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:.15s}
+button:hover{border-color:#c7d2fe;background:#f8faff}
+button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+button.primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+select,input[type=number]{padding:6px 8px;border:1px solid var(--line);border-radius:8px;
+  font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
+.slider-box{margin-top:12px;padding:12px 14px;background:#f9fafb;border-radius:9px;border:1px dashed #d1d5db}
+.slider-box .lbl{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
+.slider-box .lbl b{color:var(--rose);white-space:nowrap}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;margin-top:10px;
+  border-radius:3px;background:linear-gradient(90deg,#fecdd3,#e11d48);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:#e11d48;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#e11d48;
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:pointer}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:920px){.grid3,.grid2{grid-template-columns:1fr}}
+.metric{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed #eef1f5}
+.metric:last-child{border-bottom:none}
+.metric .k{color:var(--muted);font-size:13px}
+.metric .v{font-weight:600;font-variant-numeric:tabular-nums;color:#111;text-align:right}
+.metric .v small{font-weight:400;color:var(--muted);font-size:11px;margin-left:4px}
+h3.sec{margin:0 0 8px;font-size:13.5px;color:var(--blue);letter-spacing:.3px;font-weight:600}
+h3.sec.t{color:var(--teal)} h3.sec.a{color:var(--amber)}
+.hint{font-size:12px;color:var(--muted);margin:9px 0 0}
+canvas{width:100%;height:248px;display:block}
+.chart-title{font-size:12.5px;color:var(--muted);margin:0 0 4px}
+.concl{font-size:13.5px;line-height:1.9}
+.concl p{margin:0 0 8px}
+.concl b{color:var(--blue)}
+.concl .hl{color:var(--rose);font-weight:600}
+details summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--blue);list-style:none;outline:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸";display:inline-block;margin-right:8px;transition:.2s}
+details[open] summary::before{transform:rotate(90deg)}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#f8fafc;font-weight:600;white-space:nowrap}
+td code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:Consolas,monospace;font-size:12px}
+footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 30px}
+.pill{display:inline-block;font-size:11.5px;padding:1px 9px;border-radius:20px;
+  background:#eef2ff;color:#3730a3;margin-left:6px}
+.pill.warn{background:#fff1f2;color:#be123c}
+.pill.ok{background:#ecfdf5;color:#047857}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.bar h2{margin:0}
+.grp-name{font-weight:600;color:#2563eb}
+</style>
+</head>
 <body>
 <header>
-  <div class="brand"><div class="logo">∿</div>Correlation Studio <span class="pill" id="datasetPill">未载入数据</span></div>
-  <div style="display:flex;gap:8px" class="no-print">
-    <button class="btn" id="demoBtn">载入示例</button>
-    <button class="btn" id="printBtn">打印 / 存 PDF</button>
+  <div class="inner">
+    <h1>描述性统计工具箱</h1>
+    <p>集中趋势 · 离散程度 · 分布形态 · 常用图表 —— 改数据、拖动滑杆，所有指标与图形实时重算</p>
   </div>
 </header>
-<div class="layout">
-<aside>
-  <div class="nav-title">数据</div>
-  <button class="nav" data-view="data"><span>▦</span>导入与预览</button>
-  <button class="nav" data-view="diagnose" disabled><span>◫</span>数据诊断</button>
-  <div class="nav-title">分析</div>
-  <button class="nav" data-view="analyze" disabled><span>∿</span>双变量分析</button>
-  <button class="nav" data-view="scan" disabled><span>▤</span>全变量扫描</button>
-  <button class="nav" data-view="matrix" disabled><span>▦</span>相关矩阵</button>
-  <div class="nav-title">输出</div>
-  <button class="nav" data-view="report" disabled><span>▣</span>报告</button>
-  <div class="nav-title">质量</div>
-  <button class="nav" data-view="qa"><span>✓</span>自检报告</button>
-</aside>
-<main>
-  <!-- 数据 -->
-  <section id="view-data">
-    <h1>导入与预览</h1>
-    <div class="sub">首行为变量名 · 支持 UTF-8 / GBK · 逗号/分号/Tab 分隔 · 数据只在本地浏览器里处理</div>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>① 输入数据 <span class="tag">逗号 / 空格 / 换行 / 制表符分隔都行</span></h2>
+    <textarea id="raw" placeholder="把一列数字粘贴到这里，例如：78 85 92 88 76 ……"></textarea>
+    <div class="row">
+      <button class="primary" id="btnParse">解析并计算</button>
+      <button id="btnCsv">导入 CSV</button>
+      <input type="file" id="fileCsv" accept=".csv,.txt" style="display:none">
+      <select id="demo">
+        <option value="">载入示例数据…</option>
+        <option value="score">某班 30 人考试成绩（含一个极低分）</option>
+        <option value="income">某地居民月收入（典型右偏）</option>
+        <option value="height">某班学生身高（近似正态）</option>
+        <option value="group">分组示例：A 班 / B 班成绩（两组对比）</option>
+      </select>
+      <span style="flex:1"></span>
+      <select id="dist">
+        <option value="normal">正态分布</option>
+        <option value="lognormal">右偏（对数正态）</option>
+        <option value="left">左偏</option>
+        <option value="bimodal">双峰</option>
+        <option value="uniform">均匀分布</option>
+      </select>
+      <input type="number" id="numN" value="40" min="5" max="500" style="width:74px" title="样本量">
+      <button id="btnGen">随机生成</button>
+    </div>
+    <div class="slider-box">
+      <div class="lbl">
+        <span>离群点注入：在原数据中追加一个极端观测值 = 均值 + k × 标准差</span>
+        <b id="kVal">k = 0</b>
+      </div>
+      <input type="range" id="kSlider" min="0" max="10" step="0.5" value="0">
+    </div>
+    <p class="hint" id="parseInfo">尚未载入数据。</p>
+  </div>
+
+  <div class="grid3">
     <div class="card">
-      <h3>导入数据</h3>
-      <div class="drop" id="drop">
-        <div style="font-size:26px">⇧</div>
-        <strong>把 CSV 拖到这里，或点击选择文件</strong>
-        <span class="hint">也可以先用示例数据看看整个流程</span>
-        <input id="file" type="file" accept=".csv,.txt" hidden>
-      </div>
-      <div class="hint" id="fileInfo" style="margin-top:10px">尚未载入数据</div>
+      <h3 class="sec">集中趋势度量</h3>
+      <div id="mCentral"></div>
     </div>
-    <div class="card" id="previewCard" style="display:none">
-      <h3>数据预览 <span class="tag" id="previewTag"></span></h3>
-      <div id="preview"></div>
-    </div>
-  </section>
-
-  <!-- 诊断 -->
-  <section id="view-diagnose" class="hidden">
-    <h1>数据诊断</h1>
-    <div class="sub">先判断这份数据能不能算，再决定怎么算</div>
-    <div id="diagBody"></div>
-  </section>
-
-  <!-- 分析 -->
-  <section id="view-analyze" class="hidden">
-    <h1>双变量分析</h1>
-    <div class="sub">方法由数据决定，理由写在页面上，结论带可靠性评级</div>
-    <div class="card no-print">
-      <h3>分析设置</h3>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-        <label class="hint">X <select id="xsel"></select></label>
-        <label class="hint">Y <select id="ysel"></select></label>
-        <span class="hint" id="pairInfo"></span>
-      </div>
-    </div>
-    <div id="pairBody"></div>
-  </section>
-
-  <!-- 扫描 -->
-  <section id="view-scan" class="hidden">
-    <h1>全变量扫描</h1>
-    <div class="sub">一次看完全部变量的关联，并给出多重比较校正后的结论</div>
-    <div class="card no-print">
-      <h3>扫描设置</h3>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-        <label class="hint">目标变量 <select id="tsel"></select></label>
-        <button class="btn primary" id="scanBtn">开始扫描</button>
-        <button class="btn" id="csvBtn">导出 CSV</button>
-      </div>
-      <div class="hint" id="scanNote" style="margin-top:10px"></div>
-    </div>
-    <div class="card" id="scanCard" style="display:none"><div id="scanOut"></div></div>
-  </section>
-
-  <!-- 相关矩阵 -->
-  <section id="view-matrix" class="hidden">
-    <h1>相关矩阵</h1>
-    <div class="sub">已按相关性排序，让高关联的变量相邻；上三角显示系数，星号为显著性</div>
     <div class="card">
-      <h3>热力图 <span class="tag">蓝正红负 · 数值为相关系数</span></h3>
-      <canvas id="matrixCanvas" style="height:520px"></canvas>
-      <div class="hint" style="margin-top:8px">排序方法：取相关矩阵第一主成分的载荷排序（seriation）。颜色越深表示关联越强，与"重要"无关。分类变量不进入矩阵——它们与连续变量的关联应用 η 或 V，在「双变量分析」里看。</div>
+      <h3 class="sec t">离散程度度量</h3>
+      <div id="mDisp"></div>
     </div>
-  </section>
+    <div class="card">
+      <h3 class="sec a">分布形态度量</h3>
+      <div id="mShape"></div>
+    </div>
+  </div>
 
-  <!-- 报告 -->
-  <section id="view-report" class="hidden">
-    <h1>报告</h1>
-    <div class="sub">把这次分析整理成一份可以直接交的报告；导出前请先核对数字</div>
-    <div class="card no-print">
-      <h3>导出</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn primary" id="expPdf">打印 / 存 PDF</button>
-        <button class="btn" id="expWord">导出 Word</button>
-        <button class="btn" id="expExcel">导出 Excel</button>
-        <button class="btn" id="expHtml">导出 HTML</button>
-      </div>
-      <div class="hint" style="margin-top:10px">PDF 走浏览器打印（选"另存为 PDF"）；Word 为真正的 .docx（图片内嵌）；Excel 为多工作表 .xls。</div>
-    </div>
-    <div class="card"><div id="reportPreview"></div></div>
-  </section>
+  <div class="card bar">
+    <h2>② 图形展示 <span class="tag">四张图随数据同步更新</span></h2>
+    <button id="btnExport">下载图片 PNG</button>
+  </div>
 
-  <!-- 自检 -->
-  <section id="view-qa" class="hidden">
-    <h1>自检报告</h1>
-    <div class="sub">这个工具自己的验收测试：数值对不对、统计性质对不对、规则判得对不对</div>
-    <div class="card no-print">
-      <h3>选择一份自检 <span class="tag">均为独立参考实现比对</span></h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn primary" data-qa="selftest.html">核心统计 · 40 项</button>
-        <button class="btn" data-qa="data_kat.html">数据诊断 · 42 项</button>
-        <button class="btn" data-qa="decide_kat.html">方法决策 · 65 项</button>
-      </div>
-      <div class="hint" style="margin-top:10px">参考值来自 Python（scipy / statsmodels / dcor），与本页共用同一份 JS 内核；改动内核后必须重跑，红了就说明改坏了。</div>
+  <div class="grid2">
+    <div class="card">
+      <p class="chart-title">图 1　直方图 + 正态参考曲线</p>
+      <canvas id="cHist"></canvas>
     </div>
-    <iframe id="qaFrame" src="selftest.html" title="自检报告"></iframe>
-  </section>
-</main>
+    <div class="card">
+      <p class="chart-title">图 2　箱线图（含 1.5×IQR 异常值栅栏）</p>
+      <canvas id="cBox"></canvas>
+    </div>
+    <div class="card">
+      <p class="chart-title">图 3　Q-Q 图（对照正态分布）</p>
+      <canvas id="cQQ"></canvas>
+    </div>
+    <div class="card">
+      <p class="chart-title">图 4　经验累积分布 ECDF</p>
+      <canvas id="cEcdf"></canvas>
+    </div>
+  </div>
+
+  <div class="card" id="grpCard" style="display:none">
+    <h2>分组对比 <span class="tag">导入带组名的 CSV，或选“分组示例”后自动出现</span></h2>
+    <p class="chart-title">图 5　分组箱线图（每组各自一套栅栏）</p>
+    <canvas id="cGroupBox" style="height:270px"></canvas>
+    <div id="grpTable"></div>
+  </div>
+
+  <div class="card">
+    <h2>③ 自动解读 <span class="tag">根据当前数据实时生成</span></h2>
+    <div class="concl" id="concl"></div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>④ 常用软件实现对照（Excel / SPSS / R / Python）</summary>
+      <table>
+        <tr><th>指标</th><th>Excel</th><th>SPSS</th><th>R</th><th>Python</th></tr>
+        <tr><td>算术均值</td><td><code>=AVERAGE(A1:A30)</code></td><td>分析→描述统计→描述</td><td><code>mean(x)</code></td><td><code>np.mean(x)</code></td></tr>
+        <tr><td>中位数</td><td><code>=MEDIAN(A1:A30)</code></td><td>同上（中位数）</td><td><code>median(x)</code></td><td><code>np.median(x)</code></td></tr>
+        <tr><td>众数</td><td><code>=MODE.SNGL(A1:A30)</code></td><td>分析→描述统计→频率</td><td>自定义 / <code>modeest::mfv</code></td><td><code>statistics.mode(x)</code></td></tr>
+        <tr><td>四分位数</td><td><code>=QUARTILE.INC(A1:A30,1)</code></td><td>描述统计中的百分位数</td><td><code>quantile(x,0.25)</code></td><td><code>np.percentile(x,25)</code></td></tr>
+        <tr><td>样本标准差</td><td><code>=STDEV.S(A1:A30)</code></td><td>描述统计（标准差，n−1）</td><td><code>sd(x)</code></td><td><code>np.std(x, ddof=1)</code></td></tr>
+        <tr><td>总体标准差</td><td><code>=STDEV.P(A1:A30)</code></td><td>需手动换算 / 语法</td><td>—</td><td><code>np.std(x, ddof=0)</code></td></tr>
+        <tr><td>变异系数</td><td><code>=STDEV.S(A1:A30)/AVERAGE(A1:A30)</code></td><td>描述统计（变异系数）</td><td><code>sd(x)/mean(x)</code></td><td><code>scipy.stats.variation(x)</code></td></tr>
+        <tr><td>偏度</td><td><code>=SKEW(A1:A30)</code></td><td>描述统计（偏度，G1）</td><td><code>e1071::skewness(x, type=2)</code></td><td><code>scipy.stats.skew(x, bias=False)</code></td></tr>
+        <tr><td>峰度（超额）</td><td><code>=KURT(A1:A30)</code></td><td>描述统计（峰度，G2）</td><td><code>e1071::kurtosis(x, type=2)</code></td><td><code>scipy.stats.kurtosis(x, bias=False)</code></td></tr>
+        <tr><td>直方图</td><td>插入→图表→直方图</td><td>图表构建器→直方图</td><td><code>hist(x)</code></td><td><code>plt.hist(x, bins=…)</code></td></tr>
+        <tr><td>箱线图</td><td>插入→图表→箱形图</td><td>图表构建器→箱图</td><td><code>boxplot(x)</code></td><td><code>plt.boxplot(x)</code></td></tr>
+        <tr><td>正态性检验</td><td>需数据分析工具库</td><td>分析→非参数检验→1-样本 K-S</td><td><code>shapiro.test(x)</code></td><td><code>scipy.stats.shapiro(x)</code></td></tr>
+      </table>
+      <p class="hint">注意：Excel 的 <code>SKEW</code>/<code>KURT</code> 与 SPSS 的偏度/峰度都是「样本调整」口径（G1、G2），默认正态分布峰度记作 0。用 <code>scipy.stats.skew(x)</code> 不写 <code>bias=False</code> 会得到有偏估计，数值对不上，这是最常见的一处坑。</p>
+    </details>
+  </div>
+
+  <footer>所有计算都在你的浏览器本地完成，数据不会上传到任何服务器 · 单文件离线可用</footer>
 </div>
+
 <script>
 (function(){
-'use strict';
-var $=function(id){return document.getElementById(id);};
-var app={headers:[],rows:[],prof:null,name:'',pairCache:{},deffCache:{},scan:null,x:'',y:'',t:''};
+"use strict";
 
-/* ---------- 示例数据 ---------- */
-function demoRows(){
-  var r=[],seed=20260606;
-  function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
-  function g(){var u=rnd()||1e-9,v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
-  for(var i=0;i<90;i++){
-    var subj=Math.floor(i/5)+1;
-    var time=+(1+(i%5)*0.7+rnd()*0.5).toFixed(2);
-    var score=+(35+9*time+(subj%4)*4+g()*3).toFixed(1);
-    if(i===33) score=12;
-    r.push({'编号':i+1,'受试者':subj,'学习时间':time,'考试成绩':score,
-      '满意度':+((2+0.8*time+g()*0.4).toFixed(2)),
-      '每周刷题量':Math.round(20+time*12+Math.abs(g())*8),
-      '性别':i%2,'组别':1+(i%3),'备注':['无','无','有'][i%3]});
+/* ========== 基础数学 ========== */
+function sum(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s;}
+function mean(a){return a.length?sum(a)/a.length:NaN;}
+function variance(a,sample){
+  var n=a.length,m=mean(a),ss=0;
+  for(var i=0;i<n;i++){var d=a[i]-m;ss+=d*d;}
+  return ss/(sample?(n-1):n);
+}
+function quantileSorted(s,p){
+  var n=s.length;
+  if(!n)return NaN;
+  if(n===1)return s[0];
+  var h=(n-1)*p, lo=Math.floor(h), hi=Math.ceil(h);
+  return s[lo]+(h-lo)*(s[hi]-s[lo]);
+}
+function skewness(a){
+  var n=a.length;
+  if(n<3)return NaN;
+  var m=mean(a),sd=Math.sqrt(variance(a,true));
+  if(!sd)return 0;
+  var m3=0;
+  for(var i=0;i<n;i++)m3+=Math.pow((a[i]-m)/sd,3);
+  return n/((n-1)*(n-2))*m3;
+}
+function kurtosisExcess(a){
+  var n=a.length;
+  if(n<4)return NaN;
+  var m=mean(a),sd=Math.sqrt(variance(a,true));
+  if(!sd)return 0;
+  var m4=0;
+  for(var i=0;i<n;i++)m4+=Math.pow((a[i]-m)/sd,4);
+  return (n*(n+1))/((n-1)*(n-2)*(n-3))*m4 - 3*(n-1)*(n-1)/((n-2)*(n-3));
+}
+function trimmedMean(sorted,prop){
+  var k=Math.floor(sorted.length*prop);
+  if(sorted.length-2*k<1)return mean(sorted);
+  return mean(sorted.slice(k,sorted.length-k));
+}
+function modesOf(a){
+  var map={},best=0,i;
+  for(i=0;i<a.length;i++){var k=String(a[i]);map[k]=(map[k]||0)+1;if(map[k]>best)best=map[k];}
+  if(best<=1)return [];
+  var out=[];
+  for(var k2 in map)if(map[k2]===best)out.push(Number(k2));
+  return out.sort(function(x,y){return x-y;});
+}
+function normInv(p){
+  if(p<=0)return -8; if(p>=1)return 8;
+  var a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+  var b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+  var c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+  var d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+  var pl=0.02425,q,r;
+  if(p<pl){
+    q=Math.sqrt(-2*Math.log(p));
+    return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
   }
-  r[7]['满意度']=null; r[19]['考试成绩']=null; r[44]['学习时间']=null;
-  return r;
-}
-
-/* ---------- 工具 ---------- */
-function fmt(v,d){ if(v===null||v===undefined||v==='')return '—';var n=Number(v);
-  if(!isFinite(n))return String(v);d=d===undefined?3:d;
-  var a=Math.abs(n);return (a!==0&&(a<0.001||a>=100000))?n.toExponential(2):n.toFixed(d);}
-function pfmt(p){ if(!isFinite(p))return '—'; if(p<0.001)return 'p < 0.001'; return 'p = '+p.toFixed(4);}
-function strength(v){var a=Math.abs(v);return a<0.1?'极弱':a<0.3?'弱':a<0.5?'中等':a<0.7?'较强':'强';}
-
-/* ---------- 载入 ---------- */
-function load(headers,rows,name){
-  app.headers=headers;app.rows=rows;app.name=name;
-  app.prof=CS.data.profile(headers,rows);
-  app.pairCache={};app.deffCache={};app.scan=null;
-  $('datasetPill').textContent=rows.length+' 行 × '+headers.length+' 列';
-  $('fileInfo').textContent=name+' · '+rows.length+' 行 × '+headers.length+' 列 · 完整行 '+app.prof.completeCases+'（'+(app.prof.completeRate*100).toFixed(0)+'%）';
-  ['diagnose','analyze','scan','matrix','report'].forEach(function(v){
-    document.querySelector('.nav[data-view="'+v+'"]').disabled=false;
-  });
-  var numeric=app.prof.columns.filter(function(c){return c.type==='continuous'||c.type==='binary';});
-  var opts=numeric.map(function(c){return '<option value="'+c.name+'">'+c.name+'</option>';}).join('');
-  $('xsel').innerHTML=opts;$('ysel').innerHTML=opts;
-  if(numeric.length>1){app.x=numeric[0].name;app.y=numeric[1].name;$('xsel').value=app.x;$('ysel').value=app.y;}
-  $('tsel').innerHTML=opts;
-  var cont=app.prof.columns.filter(function(c){return c.type==='continuous';});
-  if(cont.length){app.t=cont[0].name;$('tsel').value=app.t;}
-  renderPreview();
-  renderDiagnose();
-  renderPair();
-  go('diagnose',true);
-}
-
-/* ---------- 预览 ---------- */
-function renderPreview(){
-  $('previewCard').style.display='block';
-  $('previewTag').textContent='前 '+Math.min(12,app.rows.length)+' 行 · 共 '+app.rows.length+' 行';
-  var html='<div style="overflow:auto;max-height:420px"><table><tr>'+
-    app.headers.map(function(h){
-      var c=app.prof.columns.filter(function(k){return k.name===h;})[0];
-      return '<th>'+h+'<div class="hint" style="font-weight:400">'+c.typeLabel+'</div></th>';
-    }).join('')+'</tr>';
-  app.rows.slice(0,12).forEach(function(r){
-    html+='<tr>'+app.headers.map(function(h){return '<td>'+fmt(r[h])+'</td>';}).join('')+'</tr>';
-  });
-  $('preview').innerHTML=html+'</table></div>';
-}
-
-/* ---------- 诊断 ---------- */
-function deff(col){
-  if(app.deffCache[col]!==undefined)return app.deffCache[col];
-  var idc=app.prof.columns.filter(function(c){return c.type==='id'&&c.unique<app.rows.length;})[0];
-  var v=1;
-  if(idc){
-    var cl=CS.data.clustering(app.rows.map(function(r){return r[idc.name];}),app.rows.map(function(r){return r[col];}));
-    if(cl.repeated)v=cl.designEffect;
+  if(p<=1-pl){
+    q=p-0.5;r=q*q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
   }
-  app.deffCache[col]=v;return v;
+  q=Math.sqrt(-2*Math.log(1-p));
+  return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+}
+function normPdf(z){return Math.exp(-0.5*z*z)/Math.sqrt(2*Math.PI);}
+/* 正态累积分布（Abramowitz-Stegun 近似，误差 < 1e-7） */
+function normCdf(z){
+  var t=1/(1+0.2316419*Math.abs(z));
+  var d=0.3989423*Math.exp(-z*z/2);
+  var p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));
+  return z>0?(1-p):p;
+}
+/* Kolmogorov-Smirnov 正态性检验（参数由样本估计 → Lilliefors 情形） */
+function ksTest(a,m,sd){
+  var n=a.length;
+  if(n<5||!sd)return {D:NaN,p:NaN};
+  var s=a.slice().sort(function(x,y){return x-y;}),i;
+  var D=0;
+  for(i=0;i<n;i++){
+    var F=normCdf((s[i]-m)/sd);
+    var d1=Math.abs(F-i/n), d2=Math.abs((i+1)/n-F);
+    if(d1>D)D=d1;
+    if(d2>D)D=d2;
+  }
+  var lam=(Math.sqrt(n)+0.12+0.11/Math.sqrt(n))*D;
+  var p=0;
+  for(var k=1;k<=100;k++){
+    var term=Math.exp(-2*k*k*lam*lam);
+    p+=2*Math.pow(-1,k-1)*term;
+    if(term<1e-12)break;
+  }
+  p=Math.max(0,Math.min(1,p));
+  return {D:D,p:p};
+}
+function esc(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function randn(){
+  var u=0,v=0;
+  while(!u)u=Math.random();
+  while(!v)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function fmt(x,d){
+  d=(d===undefined)?2:d;
+  if(x===null||x===undefined||!isFinite(x))return "—";
+  var s=Number(x).toFixed(d);
+  if(s.indexOf(".")>=0)s=s.replace(/0+$/,"").replace(/\.$/,"");
+  return s;
+}
+function pct(x,d){
+  if(!isFinite(x))return "—";
+  return fmt(x*100,(d===undefined)?1:d)+"%";
 }
 
-function renderDiagnose(){
-  var p=app.prof, dx=CS.data.diagnose(app.headers,app.rows);
-  var warn=dx.findings.filter(function(f){return f.level==='warn'||f.level==='error';}).length;
-  var order={'error':0,'warn':1,'info':2,'ok':3};
-  var findings=dx.findings.slice().sort(function(a,b){return order[a.level]-order[b.level];});
-  var html='';
-  html+='<div class="cards">'+
-    '<div class="kpi"><div class="k">样本量</div><div class="v">'+p.n+'</div></div>'+
-    '<div class="kpi"><div class="k">变量数</div><div class="v">'+app.headers.length+'</div></div>'+
-    '<div class="kpi"><div class="k">完整行</div><div class="v">'+p.completeCases+'<span class="hint" style="font-size:13px">（'+(p.completeRate*100).toFixed(0)+'%）</span></div></div>'+
-    '<div class="kpi" style="'+(warn?'background:#fff7f7;border-color:#f3d4d4':'')+'"><div class="k">需处理问题</div><div class="v">'+warn+'</div></div>'+
-    '</div>';
+/* ========== 状态 ========== */
+var baseData=[];
+var groupData=null;
 
-  html+='<div class="card"><h3>诊断结论 <span class="tag">按严重程度排序</span></h3><ul class="find">'+
-    findings.map(function(f){return '<li class="lv-'+f.level+'">'+f.text+'</li>';}).join('')+'</ul></div>';
-
-  html+='<div class="card"><h3>变量清单 <span class="tag">类型由取值推断</span></h3><div style="overflow:auto"><table><tr><th>变量</th><th>类型</th><th>有效 n</th><th>缺失</th><th>不同值</th><th>概要</th><th>提示</th></tr>';
-  p.columns.forEach(function(c){
-    var brief;
-    if(c.type==='categorical'||c.type==='binary') brief=c.freq?c.freq.map(function(f){return f.value+'×'+f.count;}).join('　'):'—';
-    else if(c.type==='constant') brief='恒为 '+c.min;
-    else if(c.type==='text'||c.type==='empty') brief='—';
-    else brief='均值 '+fmt(c.mean)+'，SD '+fmt(c.sd)+'，中位 '+fmt(c.median);
-    html+='<tr><td><b>'+c.name+'</b></td><td><span class="badge b-'+c.type+'">'+c.typeLabel+'</span></td>'+
-      '<td class="num">'+c.n+'</td><td class="num">'+c.missing+(c.missing?' ('+(c.missingRate*100).toFixed(0)+'%)':'')+'</td>'+
-      '<td class="num">'+c.unique+'</td><td>'+brief+'</td><td class="hint">'+c.typeNote+'</td></tr>';
-  });
-  html+='</table></div></div>';
-
-  /* 缺失 */
-  var miss=CS.data.missingReport(app.headers,app.rows);
-  html+='<div class="card"><h3>缺失值 <span class="tag">成对删除会改变每个系数的 n</span></h3>';
-  if(!miss.perColumn.length){
-    html+='<div class="hint">没有缺失值，所有方法使用同一个 n。</div>';
+/* ========== 数据解析与生成 ========== */
+function parseText(txt){
+  var parts=txt.split(/[\s,，;；、\t\r\n]+/);
+  var out=[];
+  for(var i=0;i<parts.length;i++){
+    var p=parts[i].trim();
+    if(!p)continue;
+    var v=Number(p);
+    if(isFinite(v))out.push(v);
+  }
+  return out;
+}
+var DEMOS={
+  score:[92,88,79,85,91,76,83,95,68,88,90,74,82,86,93,71,84,77,89,94,80,87,72,96,85,81,90,78,83,8],
+  income:[3.2,3.8,4.1,4.5,5.2,5.8,6.3,6.9,7.5,8.2,9.1,10.5,11.8,13.2,15.6,18.4,22.5,28.3,35.2,48.6,4.2,5.5,6.7,7.8,9.6,12.4,16.8,24.1,6.1,8.8],
+  height:[158,162,165,167,168,169,170,171,172,173,174,175,176,177,178,180,182,155,183,166,170,174,169,172,171,175,168,177,164,173]
+};
+var GROUP_DEMO={
+  order:["A 班","B 班"],
+  groups:{
+    "A 班":[78,82,85,88,90,76,84,91,87,80,83,86,79,92,81,77,85,88,74,90],
+    "B 班":[85,88,90,92,95,84,89,93,91,87,86,94,88,96,90,83,92,87,89,91]
+  }
+};
+function genSample(type,n){
+  var out=[],i;
+  if(type==="normal"){
+    for(i=0;i<n;i++)out.push(70+12*randn());
+  }else if(type==="lognormal"){
+    for(i=0;i<n;i++)out.push(Math.exp(3.6+0.55*randn()));
+  }else if(type==="left"){
+    for(i=0;i<n;i++)out.push(100-Math.exp(3.6+0.55*randn()));
+  }else if(type==="bimodal"){
+    for(i=0;i<n;i++)out.push(i%2?40+5*randn():78+6*randn());
   }else{
-    html+='<table><tr><th>变量</th><th style="width:200px">缺失率</th><th>缺失数</th></tr>';
-    miss.perColumn.sort(function(a,b){return b.rate-a.rate;}).forEach(function(c){
-      html+='<tr><td>'+c.name+'</td><td><div class="bar"><i style="width:'+Math.min(100,c.rate*100)+'%"></i></div></td><td class="num">'+c.missing+' / '+app.rows.length+'</td></tr>';
-    });
-    html+='</table>';
-    if(miss.topPatterns.length) html+='<div class="hint" style="margin-top:10px">最常见缺失组合：'+miss.topPatterns.map(function(x){return x.columns.join(' + ')+'（'+x.count+' 行）';}).join('；')+'</div>';
+    for(i=0;i<n;i++)out.push(50+40*Math.random());
   }
-  html+='</div>';
-
-  /* 影响点 */
-  if(dx.influence&&!dx.influence.error){
-    var inf=dx.influence;
-    html+='<div class="card"><h3>影响点 <span class="tag">'+inf.xName+' × '+inf.yName+'</span></h3><div class="grid2"><div>'+
-      '<div class="hint">r = <b>'+inf.r.toFixed(3)+'</b>（n='+inf.n+'）。去掉最强影响点（第 '+(inf.worst.index+1)+' 行）后 r = <b>'+
-      inf.rWithoutWorst.toFixed(3)+'</b>，变化 '+inf.maxDeltaR.toFixed(3)+'。'+
-      (inf.maxDeltaR>0.1?' <span class="badge gC">结论对单点敏感</span>':'')+'</div>'+
-      '<table style="margin-top:10px"><tr><th>行号</th><th>'+inf.xName+'</th><th>'+inf.yName+'</th><th>Δr</th><th>Cook D</th></tr>'+
-      inf.top.map(function(pt){return '<tr><td>'+(pt.index+1)+'</td><td class="num">'+fmt(pt.x)+'</td><td class="num">'+fmt(pt.y)+
-        '</td><td class="num">'+pt.deltaR.toFixed(3)+'</td><td class="num">'+pt.cook.toFixed(3)+'</td></tr>';}).join('')+
-      '</table><div class="hint" style="margin-top:6px">Cook 阈值 4/n = '+(4/inf.n).toFixed(3)+'</div></div>'+
-      '<div><canvas id="scatter"></canvas></div></div></div>';
-  }
-
-  /* 重复测量 */
-  if(dx.clustering&&dx.clustering.repeated){
-    var cl=dx.clustering;
-    var lv=cl.designEffect>=1.5?'lv-error':(cl.designEffect>=1.15?'lv-warn':'lv-info');
-    html+='<div class="card"><h3>重复测量 <span class="tag">同一受试者多行时 p 值会失效</span></h3><ul class="find">'+
-      '<li class="'+lv+'"><b>检测到重复测量</b>：'+cl.clusters+' 个个体、'+cl.observations+' 行，平均每体 '+cl.meanSize.toFixed(1)+' 行（按「'+cl.idColumn+'」分组，目标列「'+cl.target+'」）。</li>'+
-      '<li>ICC(1) = <b>'+cl.icc.toFixed(3)+'</b>；设计效应 = <b>'+cl.designEffect.toFixed(2)+'</b>；有效样本 ≈ <b>'+cl.effectiveN.toFixed(0)+'</b>（原始 '+cl.observations+'）。</li>'+
-      (cl.designEffect>=1.5?'<li class="lv-warn">按行计算 p 值会因伪重复而明显偏小，必须改用聚类 bootstrap 或按个体聚合。</li>':'')+
-      '</ul></div>';
-  }
-
-  /* 样本量 */
-  var n=app.rows.length, rc=CS.data.rCritical(n,0.05), mde=CS.data.mde(n);
-  html+='<div class="card"><h3>样本量与最小可检测效应 <span class="tag">α=0.05, power=0.8</span></h3>'+
-    '<div class="hint">当前 n = <b>'+n+'</b>：|r| ≥ <b>'+rc.toFixed(3)+'</b> 才会显著；要稳定检出，需 |r| ≥ <b>'+mde.toFixed(3)+'</b>。</div>'+
-    '<table style="margin-top:10px"><tr><th>想检出的真实相关</th><th>所需样本量</th><th>现在够吗</th></tr>'+
-    [0.3,0.5,0.7].map(function(rr){
-      var need=CS.data.requiredN(rr), ok=n>=need;
-      return '<tr><td>|r| = '+rr.toFixed(1)+'</td><td class="num">'+need+'</td><td style="color:'+(ok?'#0f9f6e':'#b32424')+'">'+(ok?'够':'不够（差 '+(need-n)+' 例）')+'</td></tr>';
-    }).join('')+'</table></div>';
-
-  $('diagBody').innerHTML=html;
-  if(dx.influence&&!dx.influence.error){
-    drawScatter(dx.influence.xName,dx.influence.yName,dx.influence.top.map(function(p){return p.index;}));
-  }
+  for(i=0;i<out.length;i++)out[i]=Math.round(out[i]*100)/100;
+  return out;
 }
 
-function drawScatter(xc,yc,hi){
-  var c=$('scatter'); if(!c)return;
-  var ctx=c.getContext('2d'),dpr=window.devicePixelRatio||1;
-  var w=c.clientWidth||560,h=300;
-  c.width=w*dpr;c.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+/* ========== 统计汇总 ========== */
+function computeStats(a){
+  var n=a.length;
+  var sorted=a.slice().sort(function(x,y){return x-y;});
+  var m=mean(a);
+  var vS=variance(a,true), vP=variance(a,false);
+  var sdS=Math.sqrt(vS), sdP=Math.sqrt(vP);
+  var q1=quantileSorted(sorted,0.25), med=quantileSorted(sorted,0.5), q3=quantileSorted(sorted,0.75);
+  var iqr=q3-q1;
+  var madList=[],i;
+  for(i=0;i<n;i++)madList.push(Math.abs(a[i]-m));
+  var mad=mean(madList);
+  var lo=q1-1.5*iqr, hi=q3+1.5*iqr;
+  var outliers=[];
+  for(i=0;i<n;i++)if(a[i]<lo||a[i]>hi)outliers.push(a[i]);
+  var sk=skewness(a), ku=kurtosisExcess(a);
+  var jb=isFinite(sk)&&isFinite(ku)?(n/6)*(sk*sk+ku*ku/4):NaN;
+  var jbP=isFinite(jb)?Math.exp(-jb/2):NaN;
+  var ks=ksTest(a,m,sdS);
+  var pos=true;
+  for(i=0;i<n;i++)if(a[i]<=0){pos=false;break;}
+  var geo=pos?Math.exp(mean(a.map(Math.log))):NaN;
+  return {
+    n:n, sorted:sorted, min:sorted[0], max:sorted[n-1],
+    range:sorted[n-1]-sorted[0], m:m, med:med, q1:q1, q3:q3, iqr:iqr,
+    modes:modesOf(a), mad:mad, tm:trimmedMean(sorted,0.1), geo:geo,
+    vS:vS, vP:vP, sdS:sdS, sdP:sdP, cv:sdS/m, se:sdS/Math.sqrt(n),
+    sk:sk, ku:ku, lo:lo, hi:hi, outliers:outliers, jb:jb, jbP:jbP, ks:ks
+  };
+}
+
+/* ========== 指标渲染 ========== */
+function kv(k,v,unit){
+  return '<div class="metric"><span class="k">'+k+'</span><span class="v">'+v+
+    (unit?'<small>'+unit+'</small>':'')+'</span></div>';
+}
+function renderMetrics(st){
+  var modeTxt=st.modes.length?(st.modes.length>4?st.modes.slice(0,4).join(", ")+" 等":st.modes.join(", ")):"无（各值均唯一）";
+  document.getElementById("mCentral").innerHTML=
+    kv("样本量 n",st.n)+
+    kv("算术均值",fmt(st.m))+
+    kv("中位数 P50",fmt(st.med))+
+    kv("众数",modeTxt)+
+    kv("P25 / P75",fmt(st.q1)+" / "+fmt(st.q3))+
+    kv("截尾均值 (10%)",fmt(st.tm))+
+    kv("几何均值",isFinite(st.geo)?fmt(st.geo):"—","仅当数据全为正")+
+    kv("最小值 / 最大值",fmt(st.min)+" / "+fmt(st.max));
+
+  document.getElementById("mDisp").innerHTML=
+    kv("极差 R",fmt(st.range))+
+    kv("四分位距 IQR",fmt(st.iqr))+
+    kv("样本方差 s²",fmt(st.vS,3),"n−1")+
+    kv("样本标准差 s",fmt(st.sdS,3),"n−1")+
+    kv("总体标准差 σ",fmt(st.sdP,3),"n")+
+    kv("平均绝对偏差 MAD",fmt(st.mad))+
+    kv("变异系数 CV",isFinite(st.cv)?pct(st.cv):"—")+
+    kv("标准误 SE",fmt(st.se,3),"s/√n");
+
+  var skK=isFinite(st.sk)?(st.sk>0.5?"右偏":st.sk<-0.5?"左偏":"大致对称"):"—";
+  var kuK=isFinite(st.ku)?(st.ku>1?"尖峰厚尾":st.ku<-1?"平顶薄尾":"接近正态"):"—";
+  document.getElementById("mShape").innerHTML=
+    kv("偏度 G1",isFinite(st.sk)?fmt(st.sk,3)+' <span class="pill">'+skK+'</span>':"—")+
+    kv("峰度 G2（超额）",isFinite(st.ku)?fmt(st.ku,3)+' <span class="pill">'+kuK+'</span>':"—")+
+    kv("异常值个数",st.outliers.length+(st.outliers.length?' 个':'')+
+      (st.outliers.length?'<span class="pill warn">需核查</span>':''))+
+    kv("异常值栅栏",fmt(st.lo)+" ~ "+fmt(st.hi))+
+    kv("Jarque-Bera 统计量",isFinite(st.jb)?fmt(st.jb,2):"—")+
+    kv("JB 检验 p 值",isFinite(st.jbP)?(st.jbP<0.0001?"&lt; 0.0001":fmt(st.jbP,4)):"—")+
+    kv("K-S 统计量 D",isFinite(st.ks.D)?fmt(st.ks.D,4):"—")+
+    kv("K-S 检验 p 值",isFinite(st.ks.p)?(st.ks.p<0.0001?"&lt; 0.0001":fmt(st.ks.p,4)):"—")+
+    kv("正态性判断",isFinite(st.jbP)?(st.jbP<0.05?'<span class="pill warn">拒绝正态</span>':'<span class="pill ok">不拒绝正态</span>'):"—");
+}
+
+/* ========== 绘图 ========== */
+function fit(cv){
+  var dpr=window.devicePixelRatio||1;
+  var w=cv.clientWidth||600, h=cv.clientHeight||248;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  var ctx=cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,w,h);
-  var pts=[],i;
-  for(i=0;i<app.rows.length;i++){
-    var a=CS.data.num(app.rows[i][xc]),b=CS.data.num(app.rows[i][yc]);
-    if(isFinite(a)&&isFinite(b))pts.push([a,b,i]);
-  }
-  if(pts.length<2)return;
-  var pad=46,xmin=Infinity,xmax=-Infinity,ymin=Infinity,ymax=-Infinity;
-  pts.forEach(function(p){xmin=Math.min(xmin,p[0]);xmax=Math.max(xmax,p[0]);ymin=Math.min(ymin,p[1]);ymax=Math.max(ymax,p[1]);});
-  if(xmin===xmax)xmax=xmin+1; if(ymin===ymax)ymax=ymin+1;
-  var X=function(v){return pad+(v-xmin)/(xmax-xmin)*(w-pad-14);};
-  var Y=function(v){return h-pad-(v-ymin)/(ymax-ymin)*(h-pad-14);};
-  ctx.strokeStyle='#eef1f6';ctx.fillStyle='#8b97a8';ctx.font='11px Segoe UI';
-  for(i=0;i<=3;i++){
-    var gx=xmin+(xmax-xmin)*i/3, gy=ymin+(ymax-ymin)*i/3;
-    ctx.beginPath();ctx.moveTo(X(gx),pad-6);ctx.lineTo(X(gx),h-pad);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(pad,h-pad-(h-2*pad)*i/3);ctx.lineTo(w-14,h-pad-(h-2*pad)*i/3);ctx.stroke();
-    ctx.textAlign='center';ctx.fillText(fmt(gx),X(gx),h-pad+16);
-    ctx.textAlign='right';ctx.fillText(fmt(gy),pad-9,h-pad-(h-2*pad)*i/3+4);
-  }
-  ctx.strokeStyle='#cfd8e6';ctx.beginPath();ctx.moveTo(pad,pad-6);ctx.lineTo(pad,h-pad);ctx.lineTo(w-14,h-pad);ctx.stroke();
-  pts.forEach(function(p){
-    var isHi=hi.indexOf(p[2])>=0;
-    ctx.beginPath();ctx.arc(X(p[0]),Y(p[1]),isHi?5:3.2,0,Math.PI*2);
-    ctx.fillStyle=isHi?'#d93a3a':'#3778ed';ctx.fill();
-    if(isHi){ctx.strokeStyle='#d93a3a';ctx.lineWidth=1;ctx.beginPath();ctx.arc(X(p[0]),Y(p[1]),8,0,Math.PI*2);ctx.stroke();}
-  });
-  ctx.fillStyle='#68758a';ctx.textAlign='center';ctx.fillText(xc,w/2,h-8);
-  ctx.save();ctx.translate(14,h/2);ctx.rotate(-Math.PI/2);ctx.fillText(yc,0,0);ctx.restore();
+  ctx.font='11px "Microsoft YaHei",sans-serif';
+  return {ctx:ctx,w:w,h:h};
 }
-
-/* ---------- 双变量分析 ---------- */
-function renderPair(){
-  if(!app.x||!app.y){$('pairBody').innerHTML='<div class="empty">先在「导入与预览」载入数据</div>';return;}
-  var key=app.x+'|'+app.y;
-  var de=Math.max(deff(app.x),deff(app.y));
-  var res=app.pairCache[key]||CS.decide.analyzePair(app.rows,app.headers,app.x,app.y,{designEffect:de});
-  app.pairCache[key]=res;
-  var dec=res.decision,p=dec.primary;
-  if(!p){$('pairBody').innerHTML='<div class="empty">'+dec.excluded[0].reason+'</div>';return;}
-  var ci=p.ci?('['+fmt(p.ci.lo)+', '+fmt(p.ci.hi)+']'):'—';
-  var pTxt=pfmt(p.p);
-  if(p.pMethod==='permutation'&&p.B&&Math.abs(p.p-1/(p.B+1))<1e-12) pTxt='≤ '+fmt(1/(p.B+1));
-  var cells=[
-    ['方法',p.label,''],['系数',fmt(p.value),''],
-    ['95% CI',ci,p.ci?'':'（该指标不提供区间）'],
-    ['p 值',pTxt,p.pMethod==='permutation'?'置换 B='+p.B:(p.note||'')],
-    ['有效 n',p.n+' <span class="hint">/ '+res.context.total+'</span>','剔除 '+(res.context.total-p.n)+' 行'],
-    ['可靠性','<span class="badge g'+res.reliability.grade+'">'+res.reliability.grade+' · '+res.reliability.label+'</span>',''],
-    ['规则',dec.reasons.length?dec.reasons[0].ruleId:'—',''],
-    ['强度',strength(p.value),'经验参考']
-  ];
-  var html='<div class="cards">'+cells.map(function(a){
-    return '<div class="kpi"><div class="k">'+a[0]+'</div><div class="v'+(a[0]==='可靠性'?' small':'')+'">'+a[1]+'</div>'+(a[2]?'<div class="hint">'+a[2]+'</div>':'')+'</div>';
-  }).join('')+'</div>';
-
-  html+='<div class="card"><h3>为什么选这个方法</h3>'+
-    dec.reasons.map(function(r){return '<div class="rule"><b>'+r.ruleId+'</b>'+r.text+'</div>';}).join('')+
-    (dec.excluded.length?'<div class="hint" style="margin-top:10px">以下方法本次不采用：</div>'+dec.excluded.map(function(e){
-      return '<div class="rule" style="border-left-color:#f0cfcf"><b>'+e.ruleId+'</b><span style="color:#8a5a5a">'+e.method+'：</span>'+e.reason+'</div>';}).join(''):'')+
-    '</div>';
-
-  html+='<div class="card"><h3>结论 <span class="tag">可复制到报告，仍需人工核对</span></h3><div class="para">'+makeParagraph(res)+'</div>'+
-    (res.contradictions.length?res.contradictions.map(function(k){return '<div class="warnbox">'+k.text+'</div>';}).join(''):'')+'</div>';
-
-  var rel=res.reliability;
-  html+='<div class="card"><h3>可靠性</h3>'+
-    '<div style="margin-bottom:10px"><span class="badge g'+rel.grade+'">'+rel.grade+' 档 · '+rel.label+'</span>'+
-    '<span class="hint" style="margin-left:10px">合格 '+rel.items.filter(function(i){return i.ok;}).length+'/'+rel.items.length+' 项</span></div>'+
-    '<ul class="items">'+rel.items.map(function(i){
-      return '<li><span class="ic '+(i.ok?'y':'n')+'">'+(i.ok?'✓':'✗')+'</span>'+i.text+'</li>';}).join('')+'</ul></div>';
-
-  var ctx=res.context, rows=[];
-  function add(name,v,pv,note){rows.push({name:name,v:v,p:pv,note:note||''});}
-  if(ctx.pearson)add('Pearson r',ctx.pearson.r,ctx.pearson.p);
-  if(ctx.spearman)add('Spearman ρ',ctx.spearman.rho,ctx.spearman.p);
-  if(ctx.kendall)add('Kendall τ-b',ctx.kendall.tau,ctx.kendall.p,'正态近似');
-  if(ctx.dcor)add('距离相关 V',ctx.dcor.v,ctx.dcor.p,'置换 B='+ctx.dcor.B);
-  if(ctx.cramers)add("Cramér's V",ctx.cramers.v,ctx.cramers.p,'χ²='+fmt(ctx.cramers.chi2,2)+', df='+ctx.cramers.df);
-  if(ctx.eta)add('相关比 η',ctx.eta.eta,ctx.eta.p,'η²='+fmt(ctx.eta.eta2)+'，F('+ctx.eta.df1+','+ctx.eta.df2+')='+fmt(ctx.eta.F,2));
-  html+='<div class="card"><h3>方法对照 <span class="tag">数值不同不是矛盾，它们回答不同问题</span></h3><table><tr><th>方法</th><th>系数</th><th>p</th><th>说明</th></tr>'+
-    rows.map(function(r){return '<tr><td>'+r.name+'</td><td class="num">'+fmt(r.v)+'</td><td class="num">'+pfmt(r.p)+'</td><td class="hint">'+r.note+'</td></tr>';}).join('')+'</table></div>';
-
-  html+='<div class="card"><h3>拟合与残差 <span class="tag">拟合曲线 + 95% 自助置信带</span></h3>'+
-    '<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px" class="no-print">'+
-    '<label class="hint">拟合阶数 <select id="degsel"><option value="1">1 次（直线）</option><option value="2">2 次</option><option value="3">3 次</option></select></label>'+
-    '<span class="hint" id="fitInfo"></span></div>'+
-    '<canvas id="fitCanvas" style="height:330px"></canvas>'+
-    '<canvas id="resCanvas" style="height:290px;margin-top:12px"></canvas>'+
-    '<div class="hint" style="margin-top:8px">橙线为拟合曲线；浅蓝带是按<b>观测对重抽样</b>得到的 95% 置信带（B=400，seed 固定，可复现）。下方左图为残差 vs 拟合值，右图为 Q-Q：左图若呈喇叭形或弯曲、右图若明显偏离虚线，说明线性/低阶拟合不足。</div>'+
-    '</div>';
-
-  $('pairBody').innerHTML=html;
-  var ds=$('degsel');
-  if(ds){ ds.value='1'; ds.onchange=drawFit; drawFit(); }
+function niceTicks(min,max,count){
+  if(!(max>min)){max=min+1;min=min-1;}
+  var span=max-min, step=Math.pow(10,Math.floor(Math.log(span/count)/Math.LN10));
+  var err=span/count/step;
+  if(err>=7.5)step*=10; else if(err>=3.5)step*=5; else if(err>=1.5)step*=2;
+  var start=Math.ceil(min/step)*step, ticks=[];
+  for(var v=start;v<=max+step*1e-6;v+=step)ticks.push(Math.round(v/step)*step);
+  return ticks;
 }
-
-function drawFit(){
-  var el=$('degsel'); if(!el)return;
-  var deg=+el.value||1;
-  var xs=app.rows.map(function(r){return r[app.x];}), ys=app.rows.map(function(r){return r[app.y];});
-  var band;
-  try{ band=CS.stat.bootstrapBand(xs,ys,{degree:deg,B:400,seed:20260101}); }catch(e){ return; }
-  var fit=function(v){var t=v-band.xMean,s=0;for(var i=0;i<band.coef.length;i++)s+=band.coef[i]*Math.pow(t,i);return s;};
-  CS.chart.scatter($('fitCanvas'),{x:xs,y:ys,xLabel:app.x,yLabel:app.y,band:band,fit:fit});
-  var res=CS.stat.residuals(xs,ys,deg);
-  CS.chart.residuals($('resCanvas'),res);
-  $('fitInfo').textContent='R² = '+res.r2.toFixed(3)+'，RMSE = '+res.rmse.toFixed(3)+'，n = '+res.n+
-    (deg>=3?'（高阶易过拟合，样本内 R² 会虚高）':'');
-}
-
-function makeParagraph(res){
-  var p=res.decision.primary,rel=res.reliability,s=[],why=res.decision.reasons[0];
-  s.push('对「'+app.x+'」与「'+app.y+'」采用 <b>'+p.label+'</b>（规则 '+why.ruleId+'）：'+why.text+'。');
-  if(p.ci) s.push('结果为 <b>'+p.label.split(' ')[0]+' = '+fmt(p.value)+'</b>，95% 置信区间 ['+fmt(p.ci.lo)+', '+fmt(p.ci.hi)+']，'+pfmt(p.p)+'，有效样本 n = '+p.n+'。');
-  else s.push('结果为 <b>'+p.label+' = '+fmt(p.value)+'</b>，'+pfmt(p.p)+'，有效样本 n = '+p.n+'。');
-  s.push('方向为'+(p.value>0?'正':'负')+'，强度按经验分档属「'+strength(p.value)+'」；若按线性解释，约解释 '+(p.value*p.value*100).toFixed(0)+'% 的变异，但这只对 Pearson 成立。');
-  var fails=rel.items.filter(function(i){return !i.ok;}).map(function(i){return i.text;});
-  s.push('可靠性 <b>'+rel.grade+' 档（'+rel.label+'）</b>：'+(fails.length?fails.join('；'):'各项检查均通过')+'。');
-  if(res.contradictions.length) s.push('特别注意：'+res.contradictions[0].text);
-  s.push('以上是统计关联，不构成因果证据；结论的外推范围受抽样方式限制。');
-  return s.join('');
-}
-
-/* ---------- 扫描 ---------- */
-function runScan(){
-  if(!app.t)return;
-  var sc=CS.decide.scan(app.rows,app.headers,app.t);
-  app.scan=sc;
-  $('scanNote').textContent=sc.note;
-  $('scanCard').style.display='block';
-  if(!sc.items.length){$('scanOut').innerHTML='<div class="hint">没有可分析的变量。</div>';return;}
-  $('scanOut').innerHTML='<table><tr><th>变量</th><th>方法</th><th>系数</th><th>95% CI</th><th>p</th><th>BH</th><th>Holm</th><th>判定</th></tr>'+
-    sc.items.map(function(it){
-      var ci=it.ci?('['+fmt(it.ci.lo,2)+', '+fmt(it.ci.hi,2)+']'):'—';
-      var verdict=it.significantBH?'<span style="color:#0f9f6e">校正后显著</span>':
-        (it.significant?'<span style="color:#b8860b">仅原始 p 显著</span>':'<span class="hint">不显著</span>');
-      return '<tr><td>'+it.variable+'<div class="hint">'+it.label+'</div></td><td>'+it.method+'</td><td class="num">'+fmt(it.value)+
-        '</td><td class="num">'+ci+'</td><td class="num">'+fmt(it.p,4)+'</td><td class="num">'+fmt(it.pBH,4)+
-        '</td><td class="num">'+fmt(it.pHolm,4)+'</td><td>'+verdict+(it.warning?'<div class="hint">'+it.warning+'</div>':'')+'</td></tr>';
-    }).join('')+'</table>';
-}
-
-/* ---------- 相关矩阵 ---------- */
-function renderMatrix(){
-  var m=CS.decide.matrix(app.rows,app.headers);
-  var stars=m.p.map(function(row){
-    return row.map(function(p){
-      if(!isFinite(p))return '';
-      return p<0.001?'***':p<0.01?'**':p<0.05?'*':'';
-    });
-  });
-  CS.chart.heatmap($('matrixCanvas'),{labels:m.labels,matrix:m.values,stars:stars});
-  app.matrix=m;
-}
-
-/* ---------- 报告 ---------- */
-function stripTags(s){return String(s).replace(/<[^>]+>/g,'');}
-function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=(h*0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
-
-function buildModel(){
-  var res=app.pairCache[app.x+'|'+app.y]||CS.decide.analyzePair(app.rows,app.headers,app.x,app.y,{designEffect:Math.max(deff(app.x),deff(app.y))});
-  app.pairCache[app.x+'|'+app.y]=res;
-  var dec=res.decision,p=dec.primary,rel=res.reliability,dx=CS.data.diagnose(app.headers,app.rows);
-  var ctx=res.context;
-  var S=[];
-
-  S.push({type:'h2',text:'一、数据概况'});
-  S.push({type:'table',head:['项目','值'],rows:[
-    ['样本量（行）',app.rows.length],
-    ['变量数',app.headers.length],
-    ['完整行（无缺失）',app.prof.completeCases+'（'+(app.prof.completeRate*100).toFixed(1)+'%）'],
-    ['存在缺失的列',CS.data.missingReport(app.headers,app.rows).perColumn.length+' 列'],
-    ['分析对象',app.x+' × '+app.y]
-  ]});
-
-  S.push({type:'h2',text:'二、数据诊断'});
-  S.push({type:'list',items:dx.findings.slice(0,6).map(function(f){return f.text;})});
-
-  S.push({type:'h2',text:'三、方法选择'});
-  S.push({type:'p',text:'对「'+app.x+'」与「'+app.y+'」采用 '+p.label+'（规则 '+(dec.reasons[0]?dec.reasons[0].ruleId:'—')+'）。'});
-  S.push({type:'list',items:dec.reasons.map(function(r){return r.ruleId+'：'+r.text;})});
-  if(dec.excluded.length){
-    var meaningful=dec.excluded.filter(function(e){
-      /* 过滤掉"本来就不适用"的凑数项，只留真正需要解释的排除 */
-      if(e.method==='cramersv'&&ctx.cramers===undefined)return false;
-      if(e.method==='pearson'&&!ctx.pearson)return false;
-      return true;
-    });
-    if(meaningful.length){
-      S.push({type:'h3',text:'本次未采用的方法及原因'});
-      S.push({type:'list',items:meaningful.map(function(e){return e.method+'：'+e.reason;})});
+function frame(ctx,w,h,pad,xmin,xmax,ymin,ymax,xlab,hideY,hideX){
+  var i,x,y;
+  ctx.save();
+  ctx.strokeStyle="#eef1f5"; ctx.lineWidth=1;
+  var yt=niceTicks(ymin,ymax,4);
+  for(i=0;i<yt.length;i++){
+    if(yt[i]<ymin||yt[i]>ymax)continue;
+    y=h-pad.b-(yt[i]-ymin)/(ymax-ymin)*(h-pad.t-pad.b);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+    if(!hideY){
+      ctx.fillStyle="#9ca3af";ctx.textAlign="right";ctx.textBaseline="middle";
+      ctx.fillText(fmt(yt[i],1),pad.l-6,y);
     }
   }
+  if(!hideX){
+    var xt=niceTicks(xmin,xmax,5);
+    for(i=0;i<xt.length;i++){
+      if(xt[i]<xmin||xt[i]>xmax)continue;
+      x=pad.l+(xt[i]-xmin)/(xmax-xmin)*(w-pad.l-pad.r);
+      ctx.fillStyle="#9ca3af";ctx.textAlign="center";ctx.textBaseline="top";
+      ctx.fillText(fmt(xt[i],1),x,h-pad.b+6);
+    }
+  }
+  ctx.strokeStyle="#d1d5db";ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,h-pad.b);ctx.lineTo(w-pad.r,h-pad.b);
+  ctx.stroke();
+  if(xlab){
+    ctx.fillStyle="#9ca3af";ctx.textAlign="right";ctx.textBaseline="bottom";
+    ctx.fillText(xlab,w-pad.r,h-2);
+  }
+  ctx.restore();
+}
+function drawHist(a,st){
+  var o=fit(document.getElementById("cHist"));
+  var ctx=o.ctx,w=o.w,h=o.h;
+  var pad={l:44,r:12,t:14,b:30};
+  var xmin=st.min,xmax=st.max;
+  var span=xmax-xmin||1;
+  xmin-=span*0.04; xmax+=span*0.04;
+  var n=a.length;
+  var nb=Math.max(4,Math.ceil(Math.log(n)/Math.LN2)+1);
+  var bw=(xmax-xmin)/nb;
+  var counts=new Array(nb);
+  for(var i=0;i<nb;i++)counts[i]=0;
+  for(i=0;i<n;i++){
+    var idx=Math.floor((a[i]-xmin)/bw);
+    if(idx<0)idx=0; if(idx>=nb)idx=nb-1;
+    counts[idx]++;
+  }
+  var ymax=Math.max.apply(null,counts)||1;
+  ymax=ymax*1.18;
+  frame(ctx,w,h,pad,xmin,xmax,0,ymax,"数值");
+  var base=h-pad.b;
+  for(i=0;i<nb;i++){
+    var x0=pad.l+(xmin+i*bw-xmin)/(xmax-xmin)*(w-pad.l-pad.r);
+    var x1=pad.l+(xmin+(i+1)*bw-xmin)/(xmax-xmin)*(w-pad.l-pad.r);
+    var y=base-(counts[i]/ymax)*(h-pad.t-pad.b);
+    ctx.fillStyle="rgba(37,99,235,.55)";
+    ctx.fillRect(x0+0.5,y,x1-x0-1,base-y);
+    ctx.strokeStyle="rgba(37,99,235,.9)";
+    ctx.strokeRect(x0+0.5,y,x1-x0-1,base-y);
+  }
+  // 正态参考曲线
+  var m=st.m, sd=st.sdS;
+  if(sd>0){
+    ctx.beginPath();
+    ctx.strokeStyle="#e11d48"; ctx.lineWidth=2;
+    for(var px=0;px<=200;px++){
+      var xv=xmin+(xmax-xmin)*px/200;
+      var dens=normPdf((xv-m)/sd)/sd;
+      var yv=base-(dens*n*bw/ymax)*(h-pad.t-pad.b);
+      if(px===0)ctx.moveTo(pad.l,yv); else ctx.lineTo(pad.l+(xv-xmin)/(xmax-xmin)*(w-pad.l-pad.r),yv);
+    }
+    ctx.stroke();
+  }
+  // 图例
+  ctx.fillStyle="rgba(37,99,235,.7)";ctx.fillRect(pad.l+4,pad.t+2,10,10);
+  ctx.fillStyle="#6b7280";ctx.textAlign="left";ctx.textBaseline="top";
+  ctx.fillText("实际频数",pad.l+18,pad.t+2);
+  ctx.fillStyle="#e11d48";ctx.fillRect(pad.l+84,pad.t+2,10,10);
+  ctx.fillStyle="#6b7280";ctx.fillText("正态曲线",pad.l+98,pad.t+2);
+}
+function drawBox(a,st){
+  var o=fit(document.getElementById("cBox"));
+  var ctx=o.ctx,w=o.w,h=o.h;
+  var pad={l:44,r:16,t:16,b:30};
+  var xmin=st.min,xmax=st.max,span=xmax-xmin||1;
+  xmin-=span*0.06;xmax+=span*0.06;
+  frame(ctx,w,h,pad,xmin,xmax,0,1,"",true);
+  var X=function(v){return pad.l+(v-xmin)/(xmax-xmin)*(w-pad.l-pad.r);};
+  var cy=(pad.t+h-pad.b)/2;
+  var bh=68;
+  var inl=a.filter(function(v){return v>=st.lo&&v<=st.hi;});
+  var wLo=inl.length?Math.min.apply(null,inl):st.q1;
+  var wHi=inl.length?Math.max.apply(null,inl):st.q3;
+  // 须线
+  ctx.strokeStyle="#475569";ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(X(wLo),cy);ctx.lineTo(X(st.q1),cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(st.q3),cy);ctx.lineTo(X(wHi),cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(wLo),cy-bh/2);ctx.lineTo(X(wLo),cy+bh/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(wHi),cy-bh/2);ctx.lineTo(X(wHi),cy+bh/2);ctx.stroke();
+  // 箱体
+  ctx.fillStyle="rgba(13,148,136,.18)";
+  ctx.fillRect(X(st.q1),cy-bh/2,X(st.q3)-X(st.q1),bh);
+  ctx.strokeStyle="#0d9488";ctx.lineWidth=1.6;
+  ctx.strokeRect(X(st.q1),cy-bh/2,X(st.q3)-X(st.q1),bh);
+  // 中位数
+  ctx.strokeStyle="#e11d48";ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(X(st.med),cy-bh/2);ctx.lineTo(X(st.med),cy+bh/2);ctx.stroke();
+  // 异常值
+  ctx.fillStyle="#e11d48";
+  var i;
+  for(i=0;i<st.outliers.length;i++){
+    ctx.beginPath();ctx.arc(X(st.outliers[i]),cy,4,0,Math.PI*2);ctx.fill();
+  }
+  // 标签
+  ctx.fillStyle="#6b7280";ctx.textAlign="center";ctx.textBaseline="top";
+  ctx.fillText("Q1 "+fmt(st.q1),X(st.q1),cy+bh/2+8);
+  ctx.fillStyle="#e11d48";
+  ctx.fillText("中位数 "+fmt(st.med),X(st.med),cy-bh/2-18);
+  ctx.fillStyle="#6b7280";
+  ctx.fillText("Q3 "+fmt(st.q3),X(st.q3),cy+bh/2+8);
+  // 栅栏提示（放左上角，避开 x 轴刻度）
+  ctx.fillStyle="#9ca3af";ctx.textAlign="left";ctx.textBaseline="top";
+  ctx.fillText("异常值栅栏 ["+fmt(st.lo)+", "+fmt(st.hi)+"]　红点 = 异常值",pad.l+4,pad.t);
+}
+function drawQQ(a,st){
+  var o=fit(document.getElementById("cQQ"));
+  var ctx=o.ctx,w=o.w,h=o.h;
+  var pad={l:44,r:16,t:16,b:30};
+  var s=st.sorted,n=s.length;
+  var zmin=normInv(0.5/n),zmax=normInv(1-0.5/n);
+  var zp=Math.max(Math.abs(zmin),Math.abs(zmax))*1.08;
+  var ymin=st.min,ymax=st.max,span=ymax-ymin||1;
+  ymin-=span*0.06;ymax+=span*0.06;
+  frame(ctx,w,h,pad,-zp,zp,ymin,ymax,"理论分位数 z");
+  var X=function(z){return pad.l+(z+zp)/(2*zp)*(w-pad.l-pad.r);};
+  var Y=function(v){return h-pad.b-(v-ymin)/(ymax-ymin)*(h-pad.t-pad.b);};
+  // 参考线
+  ctx.strokeStyle="#cbd5e1";ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+  ctx.beginPath();
+  ctx.moveTo(X(-zp),Y(st.m-st.sdS*zp));
+  ctx.lineTo(X(zp),Y(st.m+st.sdS*zp));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // 点
+  ctx.fillStyle="rgba(37,99,235,.8)";
+  for(var i=0;i<n;i++){
+    var p=(i+0.5)/n;
+    var z=normInv(p);
+    ctx.beginPath();ctx.arc(X(z),Y(s[i]),3.2,0,Math.PI*2);ctx.fill();
+  }
+  ctx.fillStyle="#9ca3af";ctx.textAlign="left";ctx.textBaseline="bottom";
+  ctx.fillText("点越贴近虚线，越接近正态分布",pad.l,h-2);
+}
+function drawEcdf(a,st){
+  var o=fit(document.getElementById("cEcdf"));
+  var ctx=o.ctx,w=o.w,h=o.h;
+  var pad={l:44,r:16,t:16,b:30};
+  var s=st.sorted,n=s.length;
+  var xmin=st.min,xmax=st.max,span=xmax-xmin||1;
+  xmin-=span*0.04;xmax+=span*0.04;
+  frame(ctx,w,h,pad,xmin,xmax,0,1,"数值");
+  var X=function(v){return pad.l+(v-xmin)/(xmax-xmin)*(w-pad.l-pad.r);};
+  var Y=function(v){return h-pad.b-v*(h-pad.t-pad.b);};
+  ctx.strokeStyle="#0d9488";ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(X(xmin),Y(0));
+  for(var i=0;i<n;i++){
+    ctx.lineTo(X(s[i]),Y(i/n));
+    ctx.lineTo(X(s[i]),Y((i+1)/n));
+  }
+  ctx.lineTo(X(xmax),Y(1));
+  ctx.stroke();
+  // 中位数竖线
+  ctx.strokeStyle="#e11d48";ctx.setLineDash([5,4]);ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(X(st.med),Y(0));ctx.lineTo(X(st.med),Y(0.5));ctx.stroke();
+  ctx.lineTo(X(st.med),Y(0.5));ctx.lineTo(X(xmin),Y(0.5));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="#e11d48";ctx.textAlign="left";ctx.textBaseline="middle";
+  ctx.fillText("中位数处 F = 0.5",X(st.med)+6,Y(0.5)-12);
+}
 
-  S.push({type:'h2',text:'四、结果'});
-  var pcell=function(v,floor){
-    if(!isFinite(v))return '—';
-    if(floor&&v<=floor+1e-12)return '≤'+floor.toFixed(3);
-    if(v<0.001)return '<0.001';
-    return v.toFixed(3);
+/* ========== 分组对比 ========== */
+function drawGroupBox(){
+  var cv=document.getElementById("cGroupBox");
+  if(!cv||!groupData)return;
+  var o=fit(cv), ctx=o.ctx, w=o.w, h=o.h;
+  var gd=groupData;
+  var pad={l:48,r:16,t:26,b:50};
+  var gmin=Infinity,gmax=-Infinity,i,j;
+  for(i=0;i<gd.order.length;i++){
+    var arr=gd.groups[gd.order[i]];
+    for(j=0;j<arr.length;j++){
+      if(arr[j]<gmin)gmin=arr[j];
+      if(arr[j]>gmax)gmax=arr[j];
+    }
+  }
+  var sp=(gmax-gmin)||1;
+  var ymin=gmin-sp*0.1, ymax=gmax+sp*0.1;
+  frame(ctx,w,h,pad,0,1,ymin,ymax,"",false,true);
+  var Y=function(v){return h-pad.b-(v-ymin)/(ymax-ymin)*(h-pad.t-pad.b);};
+  var gw=(w-pad.l-pad.r)/gd.order.length;
+  for(i=0;i<gd.order.length;i++){
+    var name=gd.order[i];
+    var a=gd.groups[name];
+    var st=computeStats(a);
+    var cx=pad.l+gw*(i+0.5);
+    var bw=Math.min(92,gw*0.34);
+    var inl=[];
+    for(j=0;j<a.length;j++)if(a[j]>=st.lo&&a[j]<=st.hi)inl.push(a[j]);
+    var wLo=inl.length?Math.min.apply(null,inl):st.q1;
+    var wHi=inl.length?Math.max.apply(null,inl):st.q3;
+    ctx.strokeStyle="#94a3b8";ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.moveTo(cx,Y(wLo));ctx.lineTo(cx,Y(st.q1));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,Y(st.q3));ctx.lineTo(cx,Y(wHi));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx-bw/3,Y(wLo));ctx.lineTo(cx+bw/3,Y(wLo));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx-bw/3,Y(wHi));ctx.lineTo(cx+bw/3,Y(wHi));ctx.stroke();
+    var top=Y(st.q3), bot=Y(st.q1);
+    if(bot-top<1)bot=top+1;
+    ctx.fillStyle="rgba(37,99,235,.14)";
+    ctx.fillRect(cx-bw/2,top,bw,bot-top);
+    ctx.strokeStyle="#2563eb";ctx.lineWidth=1.6;
+    ctx.strokeRect(cx-bw/2,top,bw,bot-top);
+    ctx.strokeStyle="#e11d48";ctx.lineWidth=2.4;
+    ctx.beginPath();ctx.moveTo(cx-bw/2,Y(st.med));ctx.lineTo(cx+bw/2,Y(st.med));ctx.stroke();
+    ctx.fillStyle="#e11d48";
+    for(j=0;j<st.outliers.length;j++){
+      ctx.beginPath();ctx.arc(cx,Y(st.outliers[j]),3.5,0,Math.PI*2);ctx.fill();
+    }
+    var my=Y(st.m);
+    ctx.fillStyle="#0d9488";
+    ctx.beginPath();
+    ctx.moveTo(cx,my-5);ctx.lineTo(cx+5,my);ctx.lineTo(cx,my+5);ctx.lineTo(cx-5,my);
+    ctx.closePath();ctx.fill();
+    ctx.fillStyle="#374151";ctx.textAlign="center";ctx.textBaseline="top";
+    ctx.font='12px "Microsoft YaHei",sans-serif';
+    ctx.fillText(name,cx,h-pad.b+20);
+    ctx.fillStyle="#9ca3af";ctx.font='11px "Microsoft YaHei",sans-serif';
+    ctx.fillText("n="+st.n+"　中位="+fmt(st.med),cx,h-pad.b+35);
+  }
+  ctx.textAlign="left";ctx.textBaseline="top";
+  ctx.font='11px "Microsoft YaHei",sans-serif';
+  ctx.fillStyle="#6b7280";
+  ctx.fillText("红横线 = 中位数　青菱形 = 均值　红点 = 异常值",pad.l,pad.t-16);
+}
+function renderGroupTable(){
+  var gd=groupData;
+  if(!gd)return;
+  var s="<table><tr><th>组</th><th>n</th><th>均值</th><th>中位数</th><th>标准差 s</th><th>变异系数 CV</th><th>最小值</th><th>最大值</th></tr>";
+  for(var i=0;i<gd.order.length;i++){
+    var g=gd.order[i];
+    var st=computeStats(gd.groups[g]);
+    s+="<tr><td class='grp-name'>"+esc(g)+"</td><td>"+st.n+"</td><td>"+fmt(st.m)+"</td><td>"+fmt(st.med)+
+       "</td><td>"+fmt(st.sdS,3)+"</td><td>"+(isFinite(st.cv)?pct(st.cv):"—")+"</td><td>"+fmt(st.min)+"</td><td>"+fmt(st.max)+"</td></tr>";
+  }
+  s+="</table>";
+  document.getElementById("grpTable").innerHTML=s;
+}
+
+/* ========== CSV 导入 ========== */
+function readFileSmart(file,cb){
+  var fr=new FileReader();
+  fr.onload=function(){
+    var buf=fr.result, txt="";
+    try{ txt=new TextDecoder("utf-8").decode(buf); }catch(e){ txt=""; }
+    if(!txt||txt.indexOf("\uFFFD")>=0){
+      try{ txt=new TextDecoder("gbk").decode(buf); }catch(e){}
+    }
+    cb(txt);
   };
-  var rrows=[];
-  var ctx=res.context;
-  if(ctx.pearson)rrows.push(['Pearson r',fmt(ctx.pearson.r),fmt(ctx.ciPearson?ctx.ciPearson.lo:NaN),fmt(ctx.ciPearson?ctx.ciPearson.hi:NaN),pcell(ctx.pearson.p),ctx.n]);
-  if(ctx.spearman)rrows.push(['Spearman ρ',fmt(ctx.spearman.rho),fmt(ctx.ciSpearman?ctx.ciSpearman.lo:NaN),fmt(ctx.ciSpearman?ctx.ciSpearman.hi:NaN),pcell(ctx.spearman.p),ctx.n]);
-  if(ctx.kendall)rrows.push(['Kendall τ-b',fmt(ctx.kendall.tau),'—','—',pcell(ctx.kendall.p),ctx.n]);
-  if(ctx.dcor)rrows.push(['距离相关 V',fmt(ctx.dcor.v),'—','—',pcell(ctx.dcor.p,1/(ctx.dcor.B+1)),ctx.n]);
-  if(ctx.cramers)rrows.push(["Cramér's V",fmt(ctx.cramers.v),'—','—',pcell(ctx.cramers.p),ctx.cramers.n]);
-  if(ctx.eta)rrows.push(['相关比 η',fmt(ctx.eta.eta),'—','—',pcell(ctx.eta.p),ctx.eta.n]);
-  S.push({type:'table',head:['方法','系数','95% CI 下限','95% CI 上限','p','有效 n'],rows:rrows,
-    note:'Pearson/Spearman 的区间为 Fisher z 近似；Kendall 的 p 为正态近似；距离相关的 p 为置换检验（B=199，最小可达 0.005）。'});
-  S.push({type:'p',text:'可靠性评级：'+rel.grade+' 档（'+rel.label+'），合格 '+rel.items.filter(function(i){return i.ok;}).length+'/'+rel.items.length+' 项。'});
-  S.push({type:'list',items:rel.items.map(function(i){return (i.ok?'✓ ':'✗ ')+i.text;})});
-
-  S.push({type:'h2',text:'五、图形'});
-  var band=null;
-  try{ band=CS.stat.bootstrapBand(app.rows.map(function(r){return r[app.x];}),app.rows.map(function(r){return r[app.y];}),{degree:1,B:400}); }catch(e){}
-  if(band){
-    var fit=function(v){var t=v-band.xMean,s=0;for(var i=0;i<band.coef.length;i++)s+=band.coef[i]*Math.pow(t,i);return s;};
-    S.push({type:'image',dataUrl:CS.chart.png('scatter',660,330,{x:app.rows.map(function(r){return r[app.x];}),y:app.rows.map(function(r){return r[app.y];}),xLabel:app.x,yLabel:app.y,band:band,fit:fit},2),
-      width:640,height:320,caption:'图 1　'+app.x+' 与 '+app.y+' 的散点、线性拟合与 95% 自助置信带'});
-    var rr=CS.stat.residuals(app.rows.map(function(r){return r[app.x];}),app.rows.map(function(r){return r[app.y];}),1);
-    S.push({type:'image',dataUrl:CS.chart.png('residuals',660,300,rr,2),
-      width:640,height:290,caption:'图 2　残差诊断：左为残差 vs 拟合值，右为 Q-Q 图'});
+  fr.readAsArrayBuffer(file);
+}
+function parseCSV(text){
+  var lines=text.split(/\r\n|\n|\r/);
+  var rows=[];
+  for(var li=0;li<lines.length;li++){
+    var l=lines[li];
+    if(!l.trim())continue;
+    var cells=[],cur="",inQ=false;
+    for(var i=0;i<l.length;i++){
+      var c=l[i];
+      if(inQ){
+        if(c==='"'){ if(l[i+1]==='"'){cur+='"';i++;} else inQ=false; }
+        else cur+=c;
+      }else{
+        if(c==='"')inQ=true;
+        else if(c===','||c===';'||c==='\t'){ cells.push(cur.trim()); cur=""; }
+        else cur+=c;
+      }
+    }
+    cells.push(cur.trim());
+    rows.push(cells);
   }
-  if(app.matrix){
-    S.push({type:'image',dataUrl:CS.chart.png('heatmap',660,540,{labels:app.matrix.labels,matrix:app.matrix.values,
-      stars:app.matrix.p.map(function(row){return row.map(function(p){return !isFinite(p)?'':(p<0.001?'***':p<0.01?'**':p<0.05?'*':'');});})},2),
-      width:620,height:505,caption:'图 3　相关矩阵（已按相关性排序；*** p<0.001，** p<0.01，* p<0.05）'});
+  return rows;
+}
+function isNumStr(s){ return s!==""&&s!==null&&s!==undefined&&isFinite(Number(s)); }
+function handleTable(rows){
+  if(!rows||!rows.length){ alert("文件是空的或者读不出内容"); return; }
+  var start=0;
+  for(var ci=0;ci<rows[0].length;ci++){
+    var v=rows[0][ci];
+    if(v!==""&&!isNumStr(v)){ start=1; break; }
   }
+  var body=rows.slice(start);
+  if(!body.length){ alert("没有读到数据行"); return; }
+  var ncol=0,i,r,c;
+  for(i=0;i<body.length;i++)if(body[i].length>ncol)ncol=body[i].length;
+  var numCols=[],txtCols=[];
+  for(c=0;c<ncol;c++){
+    var allNum=true,any=false;
+    for(r=0;r<body.length;r++){
+      if(!body[r]||body[r].length<=c)continue;
+      var val=body[r][c];
+      if(val===""||val===undefined||val===null)continue;
+      any=true;
+      if(!isNumStr(val)){ allNum=false; break; }
+    }
+    if(any)(allNum?numCols:txtCols).push(c);
+  }
+  if(!numCols.length){ alert("没找到数值列，请确认 CSV 里有一列是数字"); return; }
+  var valCol=numCols[0];
+  if(txtCols.length){
+    var gCol=txtCols[0], groups={}, order=[], nm;
+    for(r=0;r<body.length;r++){
+      if(!body[r])continue;
+      var g=(body[r][gCol]===undefined||body[r][gCol]==="")?"(空)":body[r][gCol];
+      var vv=body[r][valCol];
+      if(!isNumStr(vv))continue;
+      if(!groups[g]){ groups[g]=[]; order.push(g); }
+      groups[g].push(Number(vv));
+    }
+    if(!order.length){ alert("分组后没有有效数据"); return; }
+    setGroupData({order:order,groups:groups});
+  }else{
+    var arr=[];
+    for(r=0;r<body.length;r++){
+      if(!body[r])continue;
+      var v2=body[r][valCol];
+      if(isNumStr(v2))arr.push(Number(v2));
+    }
+    if(arr.length<2){ alert("有效数值少于 2 个"); return; }
+    clearGroup();
+    document.getElementById("kSlider").value=0;
+    setBase(arr);
+  }
+}
+function clearGroup(){
+  groupData=null;
+  var card=document.getElementById("grpCard");
+  if(card)card.style.display="none";
+  var t=document.getElementById("grpTable");
+  if(t)t.innerHTML="";
+}
+function setGroupData(gd){
+  groupData=gd;
+  var all=[],i,j;
+  for(i=0;i<gd.order.length;i++){
+    var arr=gd.groups[gd.order[i]];
+    for(j=0;j<arr.length;j++)all.push(arr[j]);
+  }
+  baseData=all;
+  document.getElementById("raw").value=all.join(", ");
+  document.getElementById("kSlider").value=0;
+  document.getElementById("grpCard").style.display="";
+  refresh();
+}
 
-  S.push({type:'h2',text:'六、结论'});
-  S.push({type:'p',html:makeParagraph(res),plain:stripTags(makeParagraph(res))});
-
-  S.push({type:'h2',text:'七、注意事项'});
-  var notes=[
-    '相关不等于因果。本报告只描述变量间的统计关联，不能支持因果推断。',
-    '置信区间为 Fisher z 近似；秩相关在高相关时实际覆盖率约 94%，报告中使用「名义 95%」。',
-    '缺失值按成对删除处理，各系数的有效样本量可能不同，已在表中逐项标注。',
-    '多重比较：若本报告包含多个检验，应参考 BH/Holm 校正后的 p 值。',
-    '结论的外推范围受抽样方式与样本代表性限制。'
+/* ========== 导出图片 ========== */
+function exportPNG(){
+  var items=[
+    {id:"cHist",t:"图 1　直方图 + 正态参考曲线"},
+    {id:"cBox", t:"图 2　箱线图（1.5×IQR）"},
+    {id:"cQQ",  t:"图 3　Q-Q 图（对照正态）"},
+    {id:"cEcdf",t:"图 4　经验累积分布 ECDF"}
   ];
-  if(res.contradictions.length) notes.push('数据层面提示：'+res.contradictions[0].text);
-  S.push({type:'list',items:notes});
-
-  S.push({type:'h2',text:'八、复现信息'});
-  S.push({type:'table',head:['项目','值'],rows:[
-    ['核心版本',CS.VERSION],
-    ['生成时间',CS.export.stamp()],
-    ['数据指纹',fnv(app.headers.join('|')+'#'+app.rows.length+'#'+JSON.stringify(app.rows.slice(0,3))+JSON.stringify(app.rows.slice(-3)))],
-    ['缺失处理','成对删除（pairwise）'],
-    ['自助/置换种子','20260101（B = 400 / 199）'],
-    ['随机算法','mulberry32；距离相关置换 B=199']
-  ]});
-
-  return {
-    title:'相关性分析报告',
-    meta:[{k:'数据',v:app.name},{k:'分析对象',v:app.x+' × '+app.y},{k:'生成时间',v:CS.export.stamp()}],
-    sections:S
-  };
-}
-
-function renderReport(){
-  if(!app.x||!app.y){$('reportPreview').innerHTML='<div class="empty">先完成一次双变量分析</div>';return;}
-  if(!app.matrix)renderMatrix();
-  app.model=buildModel();
-  $('reportPreview').innerHTML=CS.export.toHTMLBody(app.model);
-}
-
-function exportXLS(){
-  var rows=[['项目','值'],
-    ['样本量',app.rows.length],['变量数',app.headers.length],
-    ['完整行',app.prof.completeCases],['数据',app.name],['生成时间',CS.export.stamp()]];
-  var vars=[['变量','类型','有效n','缺失','缺失率','不同值','均值','标准差']];
-  app.prof.columns.forEach(function(c){
-    vars.push([c.name,c.typeLabel,c.n,c.missing,(c.missingRate*100).toFixed(1)+'%',c.unique,
-      isFinite(c.mean)?(+c.mean.toFixed(4)):'',isFinite(c.sd)?(+c.sd.toFixed(4)):'']);
-  });
-  var resRows=[['方法','系数','CI下限','CI上限','p','有效n']];
-  var ctx=(app.pairCache[app.x+'|'+app.y]||{}).context||{};
-  if(ctx.pearson)resRows.push(['Pearson r',+ctx.pearson.r.toFixed(6),+ctx.ciPearson.lo.toFixed(6),+ctx.ciPearson.hi.toFixed(6),+ctx.pearson.p.toPrecision(6),ctx.n]);
-  if(ctx.spearman)resRows.push(['Spearman rho',+ctx.spearman.rho.toFixed(6),+ctx.ciSpearman.lo.toFixed(6),+ctx.ciSpearman.hi.toFixed(6),+ctx.spearman.p.toPrecision(6),ctx.n]);
-  if(ctx.kendall)resRows.push(['Kendall tau-b',+ctx.kendall.tau.toFixed(6),'','',+ctx.kendall.p.toPrecision(6),ctx.n]);
-  if(ctx.dcor)resRows.push(['dCor V',+ctx.dcor.v.toFixed(6),'','',+ctx.dcor.p.toPrecision(6),ctx.n]);
-  var sheets=[
-    {name:'概览',head:rows[0],rows:rows.slice(1)},
-    {name:'变量清单',head:vars[0],rows:vars.slice(1)},
-    {name:'分析结果',head:resRows[0],rows:resRows.slice(1)}
-  ];
-  if(app.matrix){
-    var mh=['变量'].concat(app.matrix.labels);
-    var mr=app.matrix.labels.map(function(l,i){
-      return [l].concat(app.matrix.values[i].map(function(v){return isFinite(v)?+v.toFixed(4):'';}));
-    });
-    sheets.push({name:'相关矩阵',head:mh,rows:mr});
+  var src0=document.getElementById("cHist");
+  if(!src0||!src0.width){ alert("还没有可导出的图形"); return; }
+  var CW=src0.width, CH=src0.height;
+  var sc=CW/(src0.clientWidth||CW);
+  var M=Math.round(26*sc), GAP=Math.round(16*sc), TITLE=Math.round(42*sc), HEAD=Math.round(66*sc);
+  var W=M*2+CW*2+GAP;
+  var H=HEAD+(TITLE+CH+GAP)*2+M;
+  var cv=document.createElement("canvas");
+  cv.width=W; cv.height=H;
+  var g=cv.getContext("2d");
+  g.fillStyle="#ffffff"; g.fillRect(0,0,W,H);
+  g.textAlign="left"; g.textBaseline="alphabetic";
+  g.fillStyle="#1f2937"; g.font="bold "+Math.round(19*sc)+'px "Microsoft YaHei"';
+  g.fillText("描述性统计图表",M,Math.round(30*sc));
+  g.fillStyle="#6b7280"; g.font=Math.round(12*sc)+'px "Microsoft YaHei"';
+  g.fillText("样本量 n = "+baseData.length+"　　导出时间 "+new Date().toLocaleString("zh-CN"),M,Math.round(50*sc));
+  for(var i=0;i<items.length;i++){
+    var src=document.getElementById(items[i].id);
+    var col=i%2, row=Math.floor(i/2);
+    var x=M+col*(CW+GAP);
+    var y=HEAD+row*(TITLE+CH+GAP);
+    g.fillStyle="#374151"; g.font=Math.round(13*sc)+'px "Microsoft YaHei"';
+    g.fillText(items[i].t,x,y+Math.round(15*sc));
+    var ty=y+Math.round(23*sc);
+    g.strokeStyle="#e5e7eb"; g.lineWidth=Math.max(1,Math.round(sc));
+    g.strokeRect(x,ty,CW,CH);
+    g.drawImage(src,x,ty,CW,CH);
   }
-  if(app.scan){
-    var sh=['变量','方法','系数','CI下限','CI上限','p','p_BH','p_Holm','n'];
-    sheets.push({name:'全变量扫描',head:sh,rows:app.scan.items.map(function(it){
-      return [it.variable,it.method,+it.value.toFixed(6),it.ci?+it.ci.lo.toFixed(6):'',it.ci?+it.ci.hi.toFixed(6):'',
-        +it.p.toPrecision(6),+it.pBH.toPrecision(6),+it.pHolm.toPrecision(6),it.n];
-    })});
+  cv.toBlob(function(blob){
+    if(!blob){ alert("导出失败，请换用 Chrome / Edge 再试"); return; }
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url;
+    a.download="描述性统计图表_"+new Date().toISOString().slice(0,10)+".png";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); },5000);
+  },"image/png");
+}
+
+/* ========== 自动解读 ========== */
+function renderConclusion(st,k,injVal,baseM,baseMed){
+  var out=[];
+  var diff=st.m-st.med;
+  var rel=st.sdS?Math.abs(diff)/st.sdS:0;
+  var t1="均值 <b>"+fmt(st.m)+"</b>，中位数 <b>"+fmt(st.med)+"</b>，均值比中位数"+(diff>=0?"高":"低")+" "+fmt(Math.abs(diff))+"。";
+  if(rel>0.12&&diff>0){
+    t1+="均值明显<b>高于</b>中位数，分布<b>右偏</b>——少数大值把均值往上拉，此时用中位数代表「典型水平」更稳健。";
+  }else if(rel>0.12&&diff<0){
+    t1+="均值明显<b>低于</b>中位数，分布<b>左偏</b>——少数小值把均值往下拖，同样建议用中位数描述典型水平。";
+  }else{
+    t1+="两者接近，分布大致<b>对称</b>，用均值代表集中趋势是合理的。";
   }
-  CS.export.download(CS.export.toXLSX(sheets),'相关性分析_'+CS.export.stamp().replace(/[: ]/g,'-')+'.xlsx');
+  out.push(t1);
+
+  var cvTxt;
+  if(!isFinite(st.cv)||isNaN(st.cv))cvTxt="变异系数无法计算（均值为 0 或数据含负值时无意义）";
+  else if(st.cv<0.15)cvTxt="CV = <b>"+pct(st.cv)+"</b>，小于 15%，数据相对<b>集中</b>，离散程度小";
+  else if(st.cv<0.3)cvTxt="CV = <b>"+pct(st.cv)+"</b>，处于 15%~30%，离散程度<b>中等</b>";
+  else cvTxt="CV = <b>"+pct(st.cv)+"</b>，超过 30%，数据<b class='hl'>离散程度较大</b>，组内差异明显";
+  out.push("极差 "+fmt(st.range)+"，标准差 s = "+fmt(st.sdS,3)+"（样本口径 n−1），"+cvTxt+
+    "。CV 的意义在于消除量纲，便于不同单位、不同量级的数据横向比较。");
+
+  var skTxt;
+  if(!isFinite(st.sk))skTxt="样本量太小，无法计算偏度";
+  else if(st.sk>1)skTxt="严重右偏（长尾拖向右）";
+  else if(st.sk>0.5)skTxt="中度右偏";
+  else if(st.sk<-1)skTxt="严重左偏（长尾拖向左）";
+  else if(st.sk<-0.5)skTxt="中度左偏";
+  else skTxt="接近对称";
+  var kuTxt;
+  if(!isFinite(st.ku))kuTxt="样本量太小，无法计算峰度";
+  else if(st.ku>1)kuTxt="尖峰厚尾，极端值出现概率高于正态";
+  else if(st.ku<-1)kuTxt="平顶薄尾，比正态分布更扁平";
+  else kuTxt="与正态分布接近";
+  out.push("偏度 G1 = <b>"+fmt(st.sk,3)+"</b>，"+skTxt+"；峰度 G2 = <b>"+fmt(st.ku,3)+"</b>（超额，正态为 0），"+kuTxt+"。");
+
+  if(st.outliers.length){
+    out.push("按 1.5×IQR 栅栏（["+fmt(st.lo)+", "+fmt(st.hi)+"]）判定，共有 <span class='hl'>"+st.outliers.length+
+      " 个异常值</span>："+st.outliers.map(function(v){return fmt(v);}).slice(0,6).join("、")+
+      (st.outliers.length>6?" 等":"")+"。处理前应核查是否为录入错误；若无误，应考虑用中位数或截尾均值 "+fmt(st.tm)+" 描述中心。");
+  }else{
+    out.push("按 1.5×IQR 栅栏判定，<b>未发现异常值</b>，数据整体较为规整。");
+  }
+
+  if(isFinite(st.jbP)){
+    out.push("Jarque-Bera 统计量 JB = "+fmt(st.jb,2)+"，对应 p 值 "+(st.jbP<0.0001?"&lt; 0.0001":fmt(st.jbP,4))+
+      (st.jbP<0.05?"，在 5% 水平下<b class='hl'>拒绝正态分布假设</b>，后续若做 t 检验、方差分析需谨慎，或考虑增大样本量。"
+                  :"，在 5% 水平下<b>不拒绝正态分布假设</b>，可以认为数据近似正态。"));
+  }
+  if(isFinite(st.ks.p)){
+    out.push("Kolmogorov-Smirnov 检验：D = <b>"+fmt(st.ks.D,4)+"</b>，近似 p 值 "+
+      (st.ks.p<0.0001?"&lt; 0.0001":fmt(st.ks.p,4))+
+      (st.ks.p<0.05?"，同样<b class='hl'>拒绝正态分布假设</b>。":"，不拒绝正态分布假设。")+
+      "（矩估计参数下的 K-S 属 Lilliefors 情形，此 p 值偏乐观，仅作参考。）");
+  }
+  if(isFinite(st.ks.p)&&isFinite(st.jbP)&&((st.ks.p<0.05)!==(st.jbP<0.05))){
+    out.push("提示：JB 与 K-S 的结论不一致，这<b>不是错误</b>。JB 由偏度、峰度构造，对<b>尾部极端值</b>格外敏感；"+
+      "K-S 看的是累积分布的最大偏差，对<b>分布中部</b>更敏感，且参数由样本估计时 p 值偏乐观。"+
+      "实际判断应把 直方图、Q-Q 图 和两个检验放在一起看，不要只凭一个 p 值下结论。");
+  }
+
+  if(k>0){
+    out.push("<span class='hl'>注意：当前注入了 1 个离群点，k = "+fmt(k,1)+"，其取值 = 原始均值 + "+fmt(k,1)+
+      "×原始标准差 = <b>"+fmt(injVal)+"</b>。</span>对比原始数据：均值由 "+fmt(baseM)+" 变为 <b>"+fmt(st.m)+"</b>，"+
+      "中位数由 "+fmt(baseMed)+" 变为 <b>"+fmt(st.med)+"</b>。可以清楚看到——<b>均值被明显拉动、标准差变大、箱线图多出一个红点，而中位数几乎不动</b>。这正是稳健性（robustness）的直观含义，也是收入、房价这类右偏数据常用中位数而非均值的原因。");
+  }
+  document.getElementById("concl").innerHTML=out.map(function(t){return "<p>"+t+"</p>";}).join("");
 }
 
-/* ---------- 路由 ---------- */
-var VIEWS=['data','diagnose','analyze','scan','matrix','report','qa'];
-function go(view,skipHash){
-  if(VIEWS.indexOf(view)<0)view='data';
-  VIEWS.forEach(function(v){
-    var el=$('view-'+v);
-    if(el)el.classList.toggle('hidden',v!==view);
-  });
-  document.querySelectorAll('.nav').forEach(function(b){
-    b.classList.toggle('active',b.dataset.view===view);
-  });
-  if(view==='diagnose')renderDiagnose();
-  if(view==='analyze')renderPair();
-  if(view==='scan'&&!app.scan)runScan();
-  if(view==='matrix'&&app.rows.length)renderMatrix();
-  if(view==='report'&&app.rows.length)renderReport();
-  if(!skipHash)location.hash=view;
-  window.scrollTo(0,0);
+/* ========== 主流程 ========== */
+function refresh(){
+  var k=parseFloat(document.getElementById("kSlider").value)||0;
+  document.getElementById("kVal").textContent="k = "+fmt(k,1);
+
+  var data=baseData.slice();
+  var injVal=NaN, baseM=NaN, baseMed=NaN;
+  if(k>0&&baseData.length>=3){
+    var m0=mean(baseData), s0=Math.sqrt(variance(baseData,true));
+    baseM=m0;
+    baseMed=quantileSorted(baseData.slice().sort(function(x,y){return x-y;}),0.5);
+    injVal=m0+k*s0;
+    data.push(injVal);
+  }
+
+  var info=document.getElementById("parseInfo");
+  if(data.length<2){
+    info.textContent="数据不足：请至少输入 2 个数字。";
+    document.getElementById("mCentral").innerHTML="";
+    document.getElementById("mDisp").innerHTML="";
+    document.getElementById("mShape").innerHTML="";
+    document.getElementById("concl").innerHTML="";
+    return;
+  }
+  info.textContent="当前参与计算：n = "+data.length+
+    (k>0?"（原始 "+baseData.length+" 个 + 1 个注入的离群点）":"");
+
+  var st=computeStats(data);
+  renderMetrics(st);
+  drawHist(data,st);
+  drawBox(data,st);
+  drawQQ(data,st);
+  drawEcdf(data,st);
+  renderConclusion(st,k,injVal,baseM,baseMed);
+
+  if(groupData&&groupData.order&&groupData.order.length){
+    drawGroupBox();
+    renderGroupTable();
+  }
 }
-document.querySelectorAll('.nav').forEach(function(b){
-  b.onclick=function(){ if(!b.disabled) go(b.dataset.view); };
-});
-document.querySelectorAll('[data-qa]').forEach(function(b){
-  b.onclick=function(){
-    document.querySelectorAll('[data-qa]').forEach(function(x){x.classList.remove('primary');});
-    b.classList.add('primary');
-    $('qaFrame').src=b.dataset.qa;
-  };
+
+function setBase(arr){
+  baseData=arr;
+  document.getElementById("raw").value=arr.join(", ");
+  refresh();
+}
+
+/* 事件绑定 */
+document.getElementById("btnParse").addEventListener("click",function(){
+  var d=parseText(document.getElementById("raw").value);
+  if(d.length<2){
+    document.getElementById("parseInfo").textContent="没有解析到有效的数字，请检查输入内容。";
+    return;
+  }
+  baseData=d;
+  clearGroup();
+  document.getElementById("kSlider").value=0;
+  refresh();
 });
 
-/* ---------- 导入 ---------- */
-$('drop').onclick=function(){$('file').click();};
-$('drop').ondragover=function(e){e.preventDefault();this.classList.add('drag');};
-$('drop').ondragleave=function(){this.classList.remove('drag');};
-$('drop').ondrop=function(e){e.preventDefault();this.classList.remove('drag');if(e.dataTransfer.files[0])importFile(e.dataTransfer.files[0]);};
-$('file').onchange=function(e){if(e.target.files[0])importFile(e.target.files[0]);};
-function importFile(f){
-  $('fileInfo').textContent='正在读取…';
-  CS.io.readFile(f).then(function(p){load(p.headers,p.rows,f.name+'（'+p.encoding+'）');})
-    .catch(function(e){$('fileInfo').textContent='导入失败：'+e.message;});
-}
-$('demoBtn').onclick=function(){var rows=demoRows();load(Object.keys(rows[0]),rows,'内置示例数据');};
-$('printBtn').onclick=function(){window.print();};
-$('xsel').onchange=function(){app.x=$('xsel').value;renderPair();};
-$('ysel').onchange=function(){app.y=$('ysel').value;renderPair();};
-$('tsel').onchange=function(){app.t=$('tsel').value;app.scan=null;};
-$('scanBtn').onclick=runScan;
-$('expPdf').onclick=function(){ if(!app.model)renderReport(); window.print(); };
-$('expWord').onclick=function(){
-  if(!app.model)renderReport();
-  try{
-    var blob=CS.export.toDOCX(app.model);
-    CS.export.download(blob,'相关性分析报告.docx');
-  }catch(e){ alert('导出 Word 失败：'+e.message+'\n可改用「导出 HTML」或打印 PDF。'); }
-};
-$('expExcel').onclick=function(){
-  try{ exportXLS(); }catch(e){ alert('导出 Excel 失败：'+e.message); }
-};
-$('expHtml').onclick=function(){
-  if(!app.model)renderReport();
-  var html=CS.export.toHTML(app.model);
-  CS.export.download(new Blob([html],{type:'text/html;charset=utf-8'}),'相关性分析报告.html');
-};
-$('csvBtn').onclick=function(){
-  if(!app.scan){alert('请先扫描');return;}
-  var rows=app.scan.items.map(function(it){
-    return {变量:it.variable,方法:it.method,系数:it.value,CI下限:it.ci?it.ci.lo:'',CI上限:it.ci?it.ci.hi:'',
-      p:it.p,p_BH:it.pBH,p_Holm:it.pHolm,n:it.n};
-  });
-  var csv=CS.io.toCSV(Object.keys(rows[0]),rows);
-  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='scan_'+app.scan.target+'.csv';a.click();
-};
-window.addEventListener('resize',function(){
-  var v=location.hash.replace('#','');
-  if(v==='diagnose'&&app.prof)renderDiagnose();
+document.getElementById("demo").addEventListener("change",function(){
+  var v=this.value;
+  if(!v)return;
+  if(v==="group"){
+    setGroupData({order:GROUP_DEMO.order.slice(),groups:{
+      "A 班":GROUP_DEMO.groups["A 班"].slice(),
+      "B 班":GROUP_DEMO.groups["B 班"].slice()
+    }});
+  }else{
+    document.getElementById("kSlider").value=0;
+    clearGroup();
+    setBase(DEMOS[v].slice());
+  }
+  this.value="";
 });
 
-/* 启动：支持 #demo、#demo/analyze、#scan 等直接入口 */
-var h=location.hash.replace('#','');
-if(h.indexOf('demo')===0){
-  $('demoBtn').click();
-  var v=h.split('/')[1];
-  if(v) go(v,true);
-}else if(h){
-  go(h,true);
-}else{
-  go('data',true);
-}
+document.getElementById("btnCsv").addEventListener("click",function(){
+  document.getElementById("fileCsv").click();
+});
+document.getElementById("fileCsv").addEventListener("change",function(){
+  var f=this.files&&this.files[0];
+  if(!f)return;
+  readFileSmart(f,function(txt){
+    try{ handleTable(parseCSV(txt)); }
+    catch(err){ alert("解析失败："+err.message); }
+  });
+  this.value="";
+});
+
+document.getElementById("btnExport").addEventListener("click",exportPNG);
+
+document.getElementById("btnGen").addEventListener("click",function(){
+  var n=parseInt(document.getElementById("numN").value,10)||40;
+  n=Math.max(5,Math.min(500,n));
+  document.getElementById("numN").value=n;
+  var type=document.getElementById("dist").value;
+  document.getElementById("kSlider").value=0;
+  clearGroup();
+  setBase(genSample(type,n));
+});
+
+document.getElementById("kSlider").addEventListener("input",refresh);
+
+var rt=null;
+window.addEventListener("resize",function(){
+  if(rt)clearTimeout(rt);
+  rt=setTimeout(refresh,120);
+});
+
+/* 初始载入示例 */
+setBase(DEMOS.score.slice());
+
 })();
 </script>
-</body></html>
+</body>
+</html>
